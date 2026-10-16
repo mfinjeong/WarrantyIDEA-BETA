@@ -10,6 +10,7 @@ artifacts/
 !.env.example
 
 #DOCUMENTATION
+AGENTS.md
 DESIGN_SYSTEM.md
 UI_SPEC.md
 UI_POLISH_REPORT.md
