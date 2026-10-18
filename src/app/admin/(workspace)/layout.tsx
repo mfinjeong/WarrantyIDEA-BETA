@@ -1,8 +1,10 @@
 import { Shell } from "@/components/layout/shell";
-export default function AdminLayout({
+import { requirePageUser } from "@/lib/server/session";
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requirePageUser(true);
   return <Shell admin>{children}</Shell>;
 }

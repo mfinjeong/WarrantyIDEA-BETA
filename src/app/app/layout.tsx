@@ -1,8 +1,10 @@
 import { Shell } from "@/components/layout/shell";
-export default function BuyerLayout({
+import { requirePageUser } from "@/lib/server/session";
+export default async function BuyerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requirePageUser();
   return <Shell>{children}</Shell>;
 }

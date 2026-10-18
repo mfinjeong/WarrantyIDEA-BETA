@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s · WarrantyIDEA",
   },
   description:
-    "Arsip garansi produk dalam satu tempat. Jelajahi demo frontend WarrantyIDEA.",
+    "Arsip garansi produk pribadi dalam satu tempat dengan akun yang aman.",
 };
 export default function RootLayout({
   children,

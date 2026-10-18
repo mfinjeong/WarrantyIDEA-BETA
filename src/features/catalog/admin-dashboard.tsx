@@ -21,7 +21,7 @@ export function AdminDashboard() {
   return (
     <>
       <PageHeading
-        eyebrow="ADMIN / RUANG KERJA DEMO"
+        eyebrow="ADMIN / RUANG KERJA"
         title="Pusat tinjauan"
         description="Satu ruang untuk katalog yang rapi dan detail yang teliti."
       >
@@ -32,16 +32,15 @@ export function AdminDashboard() {
       </PageHeading>
       <div className="summary-strip">
         {[
-          ["Total katalog", state.catalog.length, "/admin/catalog"],
+          ["Total katalog", state.stats.catalog, "/admin/catalog"],
           [
             "Menunggu tinjauan",
-            pending.length,
+            state.stats.pending,
             "/admin/reviews?status=pending",
           ],
           [
             "Disetujui",
-            state.warranties.filter((w) => w.reviewStatus === "approved")
-              .length,
+            state.stats.approved,
             "/admin/reviews?status=approved",
           ],
         ].map(([label, n, href]) => (
@@ -51,7 +50,7 @@ export function AdminDashboard() {
               <ArrowRight size={16} />
             </span>
             <strong>{String(n).padStart(2, "0")}</strong>
-            <span className="muted">Data demo lokal</span>
+            <span className="muted">Ringkasan server</span>
           </Link>
         ))}
       </div>
@@ -90,7 +89,7 @@ export function AdminDashboard() {
             <div className="section-heading">
               <div>
                 <h2>Aktivitas tinjauan</h2>
-                <p>Keputusan yang dibuat selama demo.</p>
+                <p>Riwayat keputusan tinjauan.</p>
               </div>
             </div>
             {state.activity.length ? (
@@ -116,18 +115,18 @@ export function AdminDashboard() {
             <h2 className="mt-4">Katalog yang tertata.</h2>
             <p>
               {state.catalog.filter((p) => p.active).length} produk aktif dari{" "}
-              {state.catalog.length} produk contoh.
+              {state.stats.catalog} produk katalog.
             </p>
             <Link href="/admin/catalog" className="btn btn-secondary mt-5">
               Kelola katalog <ArrowRight size={16} />
             </Link>
           </div>
           <div className="receipt-note">
-            <span className="tiny-label">DEMO, BUKAN VERIFIKASI NYATA</span>
-            <h3>Keputusan lokal.</h3>
+            <span className="tiny-label">CATATAN TINJAUAN</span>
+            <h3>Keputusan tercatat.</h3>
             <p>
               Status tinjauan tidak membuktikan keaslian produk atau dokumen.
-              Tidak ada sistem role produksi.
+              Akses tinjauan dibatasi untuk admin.
             </p>
           </div>
         </aside>

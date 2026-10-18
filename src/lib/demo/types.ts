@@ -15,13 +15,15 @@ export type Warranty = {
   notes: string;
   reviewStatus: ReviewStatus;
   reviewNote?: string;
+  /** Optional only for legacy fixtures; server records always carry a revision. */
+  revision?: number;
   createdAt: string;
   updatedAt: string;
   receiptDemoAssetId?: string;
 };
 export type WarrantyInput = Omit<
   Warranty,
-  "id" | "createdAt" | "updatedAt" | "reviewStatus" | "reviewNote"
+  "id" | "createdAt" | "updatedAt" | "reviewStatus" | "reviewNote" | "revision"
 >;
 export type CatalogProduct = {
   id: string;
@@ -49,17 +51,21 @@ export type DemoState = {
   profile: { name: string; reminders: boolean };
   activity: { id: string; text: string; date: string }[];
 };
+export type WorkspaceStats = { total: number; active: number; expiring: number; expired: number; catalog: number; pending: number; approved: number };
+export type WorkspaceState = Omit<DemoState, "profile"> & { profile: DemoState["profile"] & { id: string; email: string; role: "buyer" | "admin" }; calendar: { timeZone: string }; stats: WorkspaceStats };
+export type WarrantyPage = { items: Warranty[]; total: number; page: number; pageSize: number; pages: number };
 export type Receipt = { url: string; name: string; size: number };
-/** Adapter boundary for a future data source. The current implementation stays in the browser. */
+/** API adapter; legacy DemoState is retained for fixture/storage compatibility. */
 export interface DemoRepository {
   listWarranties(): Promise<Warranty[]>;
+  queryWarranties(query: string): Promise<WarrantyPage>;
   getWarranty(id: string): Promise<Warranty | undefined>;
   listCatalog(): Promise<CatalogProduct[]>;
   createWarranty(input: WarrantyInput): Promise<string>;
   updateWarranty(id: string, input: WarrantyInput): Promise<string>;
   removeWarranty(id: string): Promise<void>;
   upsertCatalog(product: CatalogProduct): Promise<void>;
-  review(id: string, status: ReviewStatus, note?: string): Promise<void>;
+  review(id: string, status: ReviewStatus, expectedRevision: number, note?: string): Promise<void>;
   markRead(id: string, read: boolean): Promise<void>;
   markAllRead(audience: "buyer" | "admin"): Promise<void>;
   updateProfile(name: string, reminders: boolean): Promise<void>;

@@ -1,29 +1,22 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import type {
-  DemoRepository,
-  DemoState,
-  Receipt,
-  WarrantyInput,
-} from "./types";
-import { loadDemo, resetDemo, saveDemo } from "./storage";
-import { seed } from "./fixtures";
-import { warrantyStatus } from "../format";
-import { validateCatalog, validateWarranty } from "./validation";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import type { DemoRepository, DemoState, Receipt, Warranty, WarrantyInput, WarrantyPage, WorkspaceState } from "./types";
+import { api, ApiError } from "../api-client";
+import { authClient } from "../auth-client";
+import { configureBusinessTimeZone } from "../calendar";
+import { today } from "../format";
 
 type ToastMessage = { id: number; text: string; error: boolean };
 type DemoContextValue = {
-  state: DemoState | null;
+  state: WorkspaceState | null;
   warning: string;
+  loading: boolean;
+  checkingIdentity: boolean;
+  refresh: () => Promise<void>;
+  logout: () => Promise<void>;
+  revision: number;
   repository: DemoRepository;
   toast: (text: string, error?: boolean) => void;
   toasts: ToastMessage[];
@@ -35,320 +28,171 @@ type DemoContextValue = {
   setDraft: (draft: Partial<WarrantyInput> | null) => void;
 };
 const Context = createContext<DemoContextValue | null>(null);
-const delay = () => new Promise((resolve) => setTimeout(resolve, 350));
-const stamp = () => new Date().toISOString();
-const uid = () => crypto.randomUUID();
-function reminders(state: DemoState): DemoState {
-  if (!state.profile.reminders) return state;
-  const additions = state.warranties
-    .filter(
-      (w) =>
-        warrantyStatus(w.expiryDate) === "expiring" &&
-        !state.notifications.some((n) => n.id === `reminder-${w.id}`),
-    )
-    .map((w) => ({
-      id: `reminder-${w.id}`,
-      audience: "buyer" as const,
-      title: "Masa garansi segera berakhir",
-      body: `Periksa masa berlaku ${w.productName}. Pengingat demo lokal.`,
-      createdAt: stamp(),
-      href: `/app/warranties/${w.id}`,
-    }));
-  return { ...state, notifications: [...additions, ...state.notifications] };
-}
+const key = (id: string) => encodeURIComponent(id);
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<DemoState | null>(null);
-  const current = useRef<DemoState | null>(null);
+  const path = usePathname();
+  const router = useRouter();
+  const scope = path.startsWith("/admin") && path !== "/admin/login" ? "admin" : "buyer";
+  const protectedPage = path.startsWith("/app") || (path.startsWith("/admin") && path !== "/admin/login");
+  const [snapshot, setSnapshot] = useState<{ scope: string; data: WorkspaceState } | null>(null);
+  // Never expose the previous admin snapshot while navigating into buyer scope.
+  const state = snapshot?.scope === scope && protectedPage ? snapshot.data : null;
   const [warning, setWarning] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [checkingIdentity, setCheckingIdentity] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [receipts, setReceipts] = useState<Record<string, Receipt>>({});
   const receiptRef = useRef<Record<string, Receipt>>({});
   const [draft, setDraft] = useState<Partial<WarrantyInput> | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const dismiss = useCallback(
-    (id: number) => setToasts((list) => list.filter((t) => t.id !== id)),
-    [],
-  );
-  const toast = useCallback(
-    (text: string, error = false) => {
-      const id = Date.now() + Math.random();
-      setToasts((list) => [...list.slice(-3), { id, text, error }]);
-      if (!error) timers.current.push(setTimeout(() => dismiss(id), 5000));
-    },
-    [dismiss],
-  );
+  const generation = useRef(0);
+  const identity = useRef<string | null>(null);
+  const dismiss = useCallback((id: number) => setToasts(list => list.filter(t => t.id !== id)), []);
+  const toast = useCallback((text: string, error = false) => {
+    const id = Date.now() + Math.random();
+    setToasts(list => [...list.slice(-3), { id, text, error }]);
+    if (!error) timers.current.push(setTimeout(() => dismiss(id), 5000));
+  }, [dismiss]);
+  const clearAssets = useCallback(() => {
+    setDraft(null);
+    Object.values(receiptRef.current).forEach(r => URL.revokeObjectURL(r.url));
+    receiptRef.current = {};
+    setReceipts({});
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setToasts([]);
+  }, []);
+  const clearPrivate = useCallback(() => {
+    generation.current++;
+    identity.current = null;
+    setSnapshot(null);
+    clearAssets();
+  }, [clearAssets]);
+  const refresh = useCallback(async (verifyIdentity = false) => {
+    const request = ++generation.current;
+    if (!protectedPage) { clearPrivate(); setWarning(""); setLoading(false); setCheckingIdentity(false); return; }
+    if (verifyIdentity) setCheckingIdentity(true);
+    setLoading(true);
+    setWarning("");
+    try {
+      const data = await api<WorkspaceState>(`/api/workspace?scope=${scope}`);
+      if (request !== generation.current) return;
+      configureBusinessTimeZone(data.calendar.timeZone);
+      if (identity.current && identity.current !== data.profile.id) clearAssets();
+      identity.current = data.profile.id;
+      setSnapshot({ scope, data });
+      setRevision(n => n + 1);
+    } catch (error) {
+      if (request !== generation.current) return;
+      setSnapshot(null);
+      setWarning(error instanceof Error ? error.message : "Data gagal dimuat.");
+      if (error instanceof ApiError && error.status === 401) {
+        clearPrivate();
+        router.replace(scope === "admin" ? "/admin/login" : "/login");
+      }
+    } finally { if (request === generation.current) { setLoading(false); setCheckingIdentity(false); } }
+  }, [scope, protectedPage, clearAssets, clearPrivate, router]);
   useEffect(() => {
     let alive = true;
-    Promise.resolve().then(() => {
-      if (!alive) return;
-      let loaded: ReturnType<typeof loadDemo>;
-      try {
-        loaded = loadDemo(window.localStorage);
-      } catch {
-        loaded = {
-          state: seed(),
-          warning:
-            "Penyimpanan tidak tersedia. Perubahan hanya bertahan di sesi ini.",
-        };
-      }
-      const next = reminders(loaded.state);
-      current.current = next;
-      setState(next);
-      let storageWarning = "";
-      try {
-        storageWarning = saveDemo(window.localStorage, next);
-      } catch {
-        storageWarning =
-          "Penyimpanan tidak tersedia. Perubahan hanya bertahan di sesi ini.";
-      }
-      setWarning(loaded.warning || storageWarning);
-    });
-    return () => {
-      alive = false;
-    };
+    const requests = generation;
+    void Promise.resolve().then(() => { if (alive) void refresh(); });
+    const focus = () => void refresh(true);
+    let observedDay = today();
+    const rollover = setInterval(() => {
+      const day = today();
+      if (day !== observedDay) { observedDay = day; void refresh(); }
+    }, 60000);
+    window.addEventListener("focus", focus);
+    return () => { alive = false; requests.current++; clearInterval(rollover); window.removeEventListener("focus", focus); };
+  }, [refresh]);
+  useEffect(() => () => {
+    Object.values(receiptRef.current).forEach(r => URL.revokeObjectURL(r.url));
+    timers.current.forEach(clearTimeout);
   }, []);
-  useEffect(
-    () => () => {
-      Object.values(receiptRef.current).forEach((r) =>
-        URL.revokeObjectURL(r.url),
-      );
-      timers.current.forEach(clearTimeout);
-    },
-    [],
-  );
   const setReceipt = useCallback((id: string, receipt?: Receipt) => {
     const old = receiptRef.current[id];
     if (old && old.url !== receipt?.url) URL.revokeObjectURL(old.url);
     const next = { ...receiptRef.current };
-    if (receipt) next[id] = receipt;
-    else delete next[id];
+    if (receipt) next[id] = receipt; else delete next[id];
     receiptRef.current = next;
     setReceipts(next);
   }, []);
   const moveReceipt = (from: string, to: string) => {
     const next = { ...receiptRef.current };
-    if (next[from]) {
-      if (next[to] && next[to].url !== next[from].url)
-        URL.revokeObjectURL(next[to].url);
-      next[to] = next[from];
-      delete next[from];
-      receiptRef.current = next;
-      setReceipts(next);
-    }
+    if (!next[from]) return;
+    if (next[to] && next[to].url !== next[from].url) URL.revokeObjectURL(next[to].url);
+    next[to] = next[from]; delete next[from]; receiptRef.current = next; setReceipts(next);
   };
-  const commit = (next: DemoState) => {
-    current.current = next;
-    setState(next);
+  const logout = useCallback(async () => {
     try {
-      const message = saveDemo(window.localStorage, next);
-      if (message) setWarning(message);
-    } catch {
-      setWarning(
-        "Penyimpanan tidak tersedia. Perubahan hanya bertahan di sesi ini.",
-      );
-    }
-  };
-  const get = () => {
-    if (!current.current) throw new Error("Data demo belum siap. Coba lagi.");
-    return current.current;
-  };
-  const saveWarranty = async (input: WarrantyInput, id?: string) => {
-    await delay();
-    const data = get();
-    const errors = validateWarranty(input, data.warranties, id);
-    if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
-    if (id && !data.warranties.some((w) => w.id === id))
-      throw new Error("Garansi sudah tidak tersedia.");
-    const savedId = id || uid();
-    const now = stamp();
-    const clean = {
-      ...input,
-      productName: input.productName.trim(),
-      brand: input.brand.trim(),
-      model: input.model.trim(),
-      serialNumber: input.serialNumber.trim(),
-      store: input.store.trim(),
-    };
-    const saved = {
-      ...clean,
-      id: savedId,
-      reviewStatus: "pending" as const,
-      createdAt: data.warranties.find((w) => w.id === id)?.createdAt || now,
-      updatedAt: now,
-    };
-    const next = {
-      ...data,
-      warranties: id
-        ? data.warranties.map((w) => (w.id === id ? saved : w))
-        : [saved, ...data.warranties],
-      notifications: [
-        {
-          id: uid(),
-          audience: "admin" as const,
-          title: "Garansi menunggu tinjauan",
-          body: `${saved.productName} ${id ? "diperbarui" : "ditambahkan"} pada demo.`,
-          createdAt: now,
-          href: `/admin/reviews/${savedId}`,
-        },
-        ...data.notifications,
-      ],
-    };
-    commit(reminders(next));
-    toast(`Garansi ${saved.productName} disimpan.`);
-    return savedId;
-  };
-  const repository: DemoRepository = {
-    listWarranties: async () => structuredClone(get().warranties),
-    getWarranty: async (id) =>
-      structuredClone(get().warranties.find((w) => w.id === id)),
-    listCatalog: async () => structuredClone(get().catalog),
-    createWarranty: (input) => saveWarranty(input),
-    updateWarranty: (id, input) => saveWarranty(input, id),
-    removeWarranty: async (id) => {
-      await delay();
-      const data = get();
-      const item = data.warranties.find((w) => w.id === id);
-      commit({
-        ...data,
-        warranties: data.warranties.filter((w) => w.id !== id),
-      });
-      setReceipt(id);
-      toast(`Garansi ${item?.productName || ""} dihapus.`);
-    },
-    upsertCatalog: async (product) => {
-      await delay();
-      const data = get();
-      const errors = validateCatalog(product, data.catalog);
-      if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
-      const saved = {
-        ...product,
-        id: product.id || uid(),
-        name: product.name.trim(),
-        brand: product.brand.trim(),
-        model: product.model.trim(),
-      };
-      commit({
-        ...data,
-        catalog: data.catalog.some((p) => p.id === saved.id)
-          ? data.catalog.map((p) => (p.id === saved.id ? saved : p))
-          : [saved, ...data.catalog],
-      });
-      toast("Katalog produk diperbarui.");
-    },
-    review: async (id, status, note = "") => {
-      await delay();
-      const data = get();
-      const item = data.warranties.find((w) => w.id === id);
-      if (!item) throw new Error("Garansi tidak ditemukan.");
-      if (
-        status === "rejected" &&
-        (note.trim().length < 10 || note.length > 500)
-      )
-        throw new Error("Alasan harus 10–500 karakter.");
-      const now = stamp();
-      const label =
-        status === "approved"
-          ? "disetujui"
-          : status === "rejected"
-            ? "ditolak"
-            : "dikembalikan ke antrean";
-      commit({
-        ...data,
-        warranties: data.warranties.map((w) =>
-          w.id === id
-            ? {
-                ...w,
-                reviewStatus: status,
-                reviewNote: note.trim() || undefined,
-                updatedAt: now,
-              }
-            : w,
-        ),
-        notifications: [
-          {
-            id: uid(),
-            audience: "buyer",
-            title: `Tinjauan demo ${label}`,
-            body: `${item.productName}: ${note || "Status tinjauan demo telah diperbarui."}`,
-            createdAt: now,
-            href: `/app/warranties/${id}`,
-          },
-          ...data.notifications,
-        ],
-        activity: [
-          { id: uid(), text: `${item.productName} ${label}`, date: now },
-          ...data.activity,
-        ].slice(0, 20),
-      });
-      toast("Keputusan demo disimpan.");
-    },
-    markRead: async (id, read) => {
-      const data = get();
-      commit({
-        ...data,
-        notifications: data.notifications.map((n) =>
-          n.id === id ? { ...n, readAt: read ? stamp() : undefined } : n,
-        ),
-      });
-    },
-    markAllRead: async (audience) => {
-      const data = get();
-      commit({
-        ...data,
-        notifications: data.notifications.map((n) =>
-          n.audience === audience ? { ...n, readAt: n.readAt || stamp() } : n,
-        ),
-      });
-      toast("Semua notifikasi ditandai dibaca.");
-    },
-    updateProfile: async (name, enabled) => {
-      await delay();
-      if (name.trim().length < 2 || name.trim().length > 60)
-        throw new Error("Nama harus 2–60 karakter.");
-      commit(
-        reminders({
-          ...get(),
-          profile: { name: name.trim(), reminders: enabled },
-        }),
-      );
-      toast("Profil demo disimpan.");
-    },
-    reset: async () => {
-      await delay();
-      let fresh: DemoState;
+      const result = await authClient.signOut();
+      if (result.error) throw new Error(result.error.message || "Gagal keluar.");
+      clearPrivate();
+      router.replace("/login");
+      router.refresh();
+    } catch (error) { toast(error instanceof Error ? error.message : "Gagal keluar.", true); }
+  }, [clearPrivate, toast, router]);
+  const expectedUserId = state?.profile.id;
+  const repository = useMemo<DemoRepository>(() => {
+    async function mutate<T>(url: string, method: string, body?: unknown): Promise<T> {
+      if (!expectedUserId) throw new Error("Sesi akun belum siap. Muat ulang ruang kerja.");
+      let data: T;
       try {
-        fresh = resetDemo(window.localStorage);
-      } catch {
-        fresh = seed();
+        data = await api<T>(url, { method, headers: { "X-Workspace-User": expectedUserId }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+      } catch (error) {
+        if (error instanceof ApiError && (error.code === "SESSION_CHANGED" || error.status === 401)) {
+          clearPrivate();
+          await refresh(true);
+        }
+        throw error;
       }
-      Object.keys(receiptRef.current).forEach((id) => setReceipt(id));
-      setDraft(null);
-      commit(reminders(fresh));
-      toast("Data demo dikembalikan ke kondisi awal.");
-    },
-  };
-  return (
-    <Context.Provider
-      value={{
-        state,
-        warning,
-        repository,
-        toast,
-        toasts,
-        dismiss,
-        receipts,
-        setReceipt,
-        moveReceipt,
-        draft,
-        setDraft,
-      }}
-    >
-      {children}
-    </Context.Provider>
-  );
+      await refresh();
+      if (identity.current !== expectedUserId)
+        throw new ApiError("Akun telah berubah. Muat ulang ruang kerja sebelum melanjutkan.", 409, "SESSION_CHANGED");
+      return data;
+    }
+    async function save(input: WarrantyInput, id?: string) {
+      // Previews are ephemeral; never send synthetic receipt/upload identifiers.
+      const payload = { productName: input.productName, brand: input.brand, model: input.model, category: input.category, serialNumber: input.serialNumber, store: input.store, purchaseDate: input.purchaseDate, expiryDate: input.expiryDate, price: input.price, notes: input.notes };
+      const saved = await mutate<Warranty>(id ? `/api/warranties/${key(id)}` : "/api/warranties", id ? "PUT" : "POST", payload);
+      toast(`Garansi ${saved.productName} disimpan.`);
+      return saved.id;
+    }
+    return {
+      listWarranties: async () => (await api<WarrantyPage>("/api/warranties?pageSize=6")).items,
+      queryWarranties: query => api<WarrantyPage>(`/api/warranties?${query}`),
+      getWarranty: async id => { try { return await api<Warranty>(`/api/warranties/${key(id)}`); } catch (error) { if (error instanceof ApiError && error.status === 404) return undefined; throw error; } },
+      listCatalog: async () => (await api<DemoState>(`/api/workspace?scope=${scope}`)).catalog,
+      createWarranty: input => save(input),
+      updateWarranty: (id, input) => save(input, id),
+      removeWarranty: async id => { await mutate(`/api/warranties/${key(id)}`, "DELETE"); setReceipt(id); toast("Garansi dihapus."); },
+      upsertCatalog: async product => { await mutate("/api/catalog", "POST", product); toast("Katalog produk diperbarui."); },
+      review: async (id, status, expectedRevision, note = "") => { await mutate(`/api/reviews/${key(id)}`, "POST", { status, expectedRevision, note }); toast("Keputusan tinjauan disimpan."); },
+      markRead: async (id, read) => { try { await mutate(`/api/notifications/${key(id)}`, "PATCH", { read }); } catch (error) { toast(error instanceof Error ? error.message : "Gagal menyimpan notifikasi.", true); } },
+      markAllRead: async audience => { try { await mutate("/api/notifications", "PATCH", { audience }); toast("Semua notifikasi ditandai dibaca."); } catch (error) { toast(error instanceof Error ? error.message : "Gagal menyimpan notifikasi.", true); } },
+      updateProfile: async (name, reminders) => { await mutate("/api/profile", "PATCH", { name, reminders }); toast("Profil disimpan."); },
+      reset: async () => { throw new Error("Reset data tidak tersedia."); },
+    };
+  }, [refresh, scope, setReceipt, toast, expectedUserId, clearPrivate]);
+  return <Context.Provider value={{ state, warning, loading, checkingIdentity, refresh, logout, revision, repository, toast, toasts, dismiss, receipts, setReceipt, moveReceipt, draft, setDraft }}>{children}</Context.Provider>;
 }
 export function useDemo() {
   const value = useContext(Context);
   if (!value) throw new Error("DemoProvider diperlukan.");
   return value;
+}
+
+/** Fetch an owner-authorized record even when absent from a bounded snapshot. */
+export function useWarranty(id?: string) {
+  const { repository, revision } = useDemo();
+  const [result, setResult] = useState<{ id?: string; item?: Warranty; loading: boolean; error: string }>({ loading: !!id, error: "" });
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    if (!id) return;
+    repository.getWarranty(id).then(item => { if (active) setResult({ id, item, loading: false, error: "" }); }).catch(error => { if (active) setResult({ id, loading: false, error: error instanceof Error ? error.message : "Garansi gagal dimuat." }); });
+    return () => { active = false; };
+  }, [id, repository, revision, attempt]);
+  return { item: result.id === id ? result.item : undefined, loading: !!id && (result.loading || result.id !== id), error: result.id === id ? result.error : "", retry: () => { setResult({ id, loading: true, error: "" }); setAttempt(n => n + 1); } };
 }

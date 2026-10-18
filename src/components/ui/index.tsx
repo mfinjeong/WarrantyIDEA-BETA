@@ -474,7 +474,8 @@ export function ActionMenu({
   );
 }
 export function Toasts() {
-  const { toasts, dismiss } = useDemo();
+  const { toasts, dismiss, checkingIdentity } = useDemo();
+  if (checkingIdentity) return null;
   return (
     <div className="toast-stack">
       {toasts.map((t) => (

@@ -1,69 +1,47 @@
 # WarrantyIDEA
 
-Frontend demo pengelolaan garansi produk, dibangun dengan Next.js App Router, TypeScript strict, Tailwind CSS, Plus Jakarta Sans lokal, dan Lucide. Seluruh konten menggunakan data fiktif berbahasa Indonesia.
+Arsip garansi pribadi berbasis **Next.js App Router + TypeScript**, PostgreSQL 18.6, Prisma, Zod, dan Better Auth. UI berbahasa Indonesia yang sudah ada dipertahankan: dashboard, arsip garansi, katalog/tinjauan admin, notifikasi, profil, dan alur scan simulasi.
 
-## Menjalankan lokal
+## Status dan batas keamanan
 
-Prasyarat: Node.js 24 LTS dan npm. Versi yang dipakai saat pengembangan: Node 24.15.0, npm 11.12.1. Gunakan lockfile yang tersedia.
+- Login/registrasi memakai akun dan sesi server, bukan pemilih mode demo. Data bisnis dibaca/diubah lewat Route Handlers dan database, bukan localStorage.
+- Pengguna hanya dapat membaca/mengubah garansinya sendiri. Area katalog/tinjauan admin memerlukan role admin yang ditetapkan server/administrator, bukan input registrasi.
+- Password di-hash dengan Argon2id; session cookie HttpOnly, SameSite dan Secure untuk deployment HTTPS. Input divalidasi server-side; mutasi dibatasi Origin yang sah.
+- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Hasil aktual/batas verifikasi dicatat di `BACKEND_VERIFICATION.md`.
+- Tidak ada commit/push, perubahan identitas Git, publikasi port, atau perubahan firewall otomatis.
+
+## Persiapan
+
+Node.js 24 LTS, npm, Git, PostgreSQL 18.6. Gunakan lockfile.
 
 ```powershell
-cd D:\WarrantyIDEA
+Set-Location C:\Users\Administrator\Projects\WarrantyIDEA-BETA
 npm ci
+Copy-Item .env.example .env.local
+```
+
+Edit `.env.local` **di VPS, bukan di chat**, dengan DATABASE_URL role runtime, BETTER_AUTH_SECRET acak, BETTER_AUTH_URL yang sesuai, dan APP_TIMEZONE. Jangan commit file `.env*` selain `.env.example`. Untuk development lokal saja gunakan origin tepat `http://127.0.0.1:3000`; production wajib HTTPS.
+
+Schema dan role khusus berada di namespace `warrantyidea`. Instruksi provisioning, pemisahan role migrasi/runtime, backup, migrasi aman, build dan proses persisten Windows ada di **`DEPLOYMENT.md`**. Jangan menjalankan `migrate reset`, `db push --accept-data-loss`, atau seed demo pada database existing.
+
+Setelah database/schema diprovision dan migrasi ditinjau/diterapkan dengan role migrasi:
+
+```powershell
+node --env-file=.env.local node_modules/prisma/build/index.js generate
 npm run dev
 ```
 
-Buka http://localhost:3000. Tidak memerlukan `.env`, API key, database, atau layanan eksternal. Font disajikan dari dependency lokal, bukan Google Fonts runtime.
+Aplikasi development/start hanya listen pada loopback `127.0.0.1`. Rute `/register` membuat akun pembeli; akun admin harus ditetapkan melalui proses administratif yang disetujui.
 
-Untuk menjalankan production build:
+## Fitur dan rute
 
-```powershell
-npm run build
-npm start
-```
+- Publik: `/`, `/login`, `/register`, `/admin/login`.
+- Pembeli terautentikasi: `/app`, `/app/warranties`, `/app/warranties/new`, `/app/warranties/[id]`, `/app/warranties/[id]/edit`, `/app/notifications`, `/app/profile`, `/app/scan`.
+- Admin terotorisasi: `/admin`, `/admin/catalog`, `/admin/reviews`, `/admin/reviews/[id]`, `/admin/notifications`, `/admin/profile`.
+- Pencarian, filter kategori/status, sorting dan pagination API; status kalender aktif, segera berakhir (0–30 hari), kedaluwarsa, terpisah dari keputusan review.
+- Profil/preferensi pengingat, notifikasi, aktivitas tinjauan, dan statistik berasal dari database.
 
-## Halaman dan alur
-
-| Area | Rute |
-|---|---|
-| Marketing | `/` |
-| Form masuk demo | `/login`, `/register`, `/admin/login` |
-| Pembeli | `/app`, `/app/warranties`, `/app/warranties/new`, `/app/warranties/[id]`, `/app/warranties/[id]/edit` |
-| Utilitas pembeli | `/app/scan`, `/app/notifications`, `/app/profile` |
-| Admin | `/admin`, `/admin/catalog`, `/admin/reviews`, `/admin/reviews/[id]` |
-| Utilitas admin | `/admin/notifications`, `/admin/profile` |
-| Pemulihan | Not-found untuk rute tak dikenal dan ID yang tidak ada |
-
-Mulai dari landing → **Coba demo pembeli**. Tambah/edit/hapus garansi, cari dan filter arsip, lalu pindah melalui pemilih mode ke admin. Garansi baru/edit masuk antrean; keputusan admin memperbarui status tinjauan dan notifikasi pembeli pada store yang sama. Katalog mendukung tambah/edit/aktif/nonaktif. Tersedia pencarian, sorting/pagination garansi, dialog konfirmasi, tabs, toast, skeleton, empty/error states, dan validasi client.
-
-Sidebar tampil pada desktop, bottom navigation untuk pembeli pada mobile/tablet, dan drawer untuk admin. Tabel diganti kartu di bawah 768px.
-
-## Penyimpanan dan reset
-
-- Key `warrantyidea:demo:v1` menyimpan metadata fiktif, katalog, nama tampilan demo, preferensi pengingat, notifikasi, dan aktivitas tinjauan.
-- Storage dibaca setelah mount. Data invalid dipulihkan ke seed; storage diblokir/penuh beralih ke memori dengan pemberitahuan.
-- Seed memakai tanggal kalender relatif terhadap tanggal lokal saat pertama dibuat. Aktif, segera berakhir (0–30 hari), dan kedaluwarsa dihitung terpisah dari status tinjauan.
-- **Profil → Reset data demo** menghapus data aplikasi ini dan mengembalikan seed tanpa menghapus key aplikasi lain.
-- Data dibagikan antara mode pembeli/admin dalam sesi aplikasi dan bertahan setelah refresh. Sinkronisasi langsung antartab tidak diimplementasikan; muat ulang tab untuk membaca perubahan yang sudah disimpan.
-
-## Fitur simulasi dan batas implementasi
-
-- Mode pembeli/admin **bukan autentikasi atau pembatasan akses**. Rute admin terbuka. Form masuk hanya memvalidasi isian lalu membuka demo; kredensial tidak disimpan. Registrasi hanya menyimpan nama tampilan fiktif.
-- QR, barcode, dan pembacaan nota menggunakan hasil contoh deterministik. Tidak ada akses kamera, pemindaian nyata, OCR, atau ekstraksi data dari gambar.
-- Gambar JPG/PNG/WebP maksimal 5 MB hanya preview melalui object URL dalam memori. Tidak diunggah dan tidak disimpan dalam localStorage. Preview hilang setelah refresh; draft form dibuang saat ditinggalkan.
-- Nota seed adalah ilustrasi sintetis berlabel **CONTOH**, bukan bukti transaksi.
-- Keputusan admin hanya mengubah status demo. Tidak membuktikan keaslian dokumen atau produk.
-- Pengingat dibuat di browser ketika data dimuat/diubah; tidak ada background job, push, atau email.
-- Gunakan data fiktif. Tidak ada backend, API routes, server actions mutasi, Supabase, secret, atau analytics.
-
-## Struktur dan dependency
-
-- `src/app`: rute, layout server, loading/error/not-found; route group admin memisahkan shell workspace dari login.
-- `src/components`: UI reusable dan shell marketing/pembeli/admin.
-- `src/features`: presentasi dan interaksi garansi, scan, katalog/tinjauan, profil, notifikasi.
-- `src/lib/demo`: tipe, interface repository async, fixtures, provider bersama, dan adapter storage; `src/lib/format.ts` menangani tanggal kalender dan rupiah.
-- `tests`: unit test domain/storage dan browser test alur/responsif/aksesibilitas.
-
-Dependency runtime dibatasi pada framework React/Next, Lucide (ikon), dan Fontsource (font lokal). Tailwind/PostCSS untuk styling; ESLint/TypeScript untuk pemeriksaan; tsx untuk unit test tanpa framework tambahan; Playwright untuk browser; axe untuk audit aksesibilitas; Prettier untuk konsistensi format. Tidak memakai library chart, form, atau backend.
+Kontrak endpoint dan environment: `API.md`. Rencana berbasis inspeksi kode awal: `IMPLEMENTATION_PLAN.md`.
 
 ## Pemeriksaan
 
@@ -71,15 +49,31 @@ Dependency runtime dibatasi pada framework React/Next, Lucide (ikon), dan Fontso
 npm run lint
 npm run typecheck
 npm test
-npx playwright install chromium
-npm run test:browser
-npm run build
+node --env-file=.env.local node_modules/next/dist/bin/next build
+node node_modules/playwright/cli.js install chromium
 ```
 
-Browser test memakai Chromium lokal dan menyalakan dev server otomatis jika port 3000 belum digunakan. Screenshot responsif berada di `test-results/` (diabaikan Git). Trace disimpan jika test gagal. Audit axe bukan pengganti audit aksesibilitas manual menyeluruh.
+Database-writing integration/browser tests harus memakai **database test terisolasi**, bukan `webapp_db` production. Suite HTTP `tests/http-integration.mjs` memerlukan opt-in `ALLOW_ISOLATED_HTTP_TESTS=1`, loopback API, dan URL database test yang lolos guard. Jangan menjalankannya pada production. Instruksi dan hasil pemeriksaan aktual ada di `BACKEND_VERIFICATION.md`.
 
-Rujukan setup: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Tailwind CSS untuk Next.js](https://tailwindcss.com/docs/installation/framework-guides/nextjs).
+## Batas fitur yang tetap eksplisit
 
-Lihat `VERIFICATION.md` untuk hasil pemeriksaan aktual dan batas pengujian.
+- Kamera, QR/barcode dan OCR masih simulasi berlabel, bukan ekstraksi nyata.
+- Gambar nota hanya preview lokal dalam memori; tidak diunggah atau dipersist, hilang setelah reload. Metadata pembelian/garansi dipersist di PostgreSQL.
+- Notifikasi pengingat dalam aplikasi tidak sama dengan scheduler email/push. Tidak mengklaim pengiriman email tanpa provider dan konfigurasi.
+- Data localStorage demo lama tidak diimpor otomatis: identitas pemiliknya tidak bisa diverifikasi. Tidak ada reset/seed browser yang menghapus data production.
+- Keputusan review bukan bukti keaslian produk/dokumen.
 
-Untuk membandingkan polish UI, jalankan `node scripts/capture-polish.mjs after` saat server lokal aktif. Screenshot landing/dashboard pada lima ukuran dan data ukur disimpan di `artifacts/ui-polish/after/`. Screenshot baseline sesi polish tersedia lokal di `artifacts/ui-polish/before/`; folder artefak diabaikan Git. `PREVIEW_URL` dapat dipakai untuk memilih server lokal lain.
+## Struktur
+
+- `src/app/api`: Route Handlers autentikasi dan API aplikasi.
+- `src/lib/server`: database, sesi/otorisasi, validasi, layanan dan pemetaan DTO.
+- `prisma`: schema, migrasi SQL, generated client melalui Prisma.
+- `src/lib/demo/provider.tsx`: adapter konteks UI yang kini memanggil API; nama historis dipertahankan agar perubahan presentasi minimal.
+- `src/features`, `src/components`: UI yang sudah ada dan integrasi state/auth.
+- `src/lib/demo/fixtures.ts`, `storage.ts`: utilitas legacy/test, bukan sumber data business runtime.
+- `deploy`: template provisioning non-destruktif dan runner production loopback-only.
+- `tests`: unit/domain/backend, HTTP terisolasi, dan browser.
+
+## Production
+
+Ikuti **`DEPLOYMENT.md`** untuk perintah exact backup/migrate/build/start, Windows Task Scheduler, least-privilege service account, reverse proxy, DNS/HTTPS dan firewall. Jangan expose port Node 3000 atau PostgreSQL 5432 ke internet. Persetujuan diperlukan sebelum perubahan konfigurasi penting atau publikasi.

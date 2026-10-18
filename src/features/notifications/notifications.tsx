@@ -27,7 +27,7 @@ export function NotificationsPage({ admin = false }: { admin?: boolean }) {
       <PageHeading
         eyebrow="KABAR TERBARU"
         title="Notifikasi"
-        description={`${unread} belum dibaca · Pengingat dan aktivitas demo Anda.`}
+        description={`${unread} belum dibaca · Pengingat dan aktivitas Anda.`}
       >
         <Button
           variant="secondary"
@@ -49,11 +49,8 @@ export function NotificationsPage({ admin = false }: { admin?: boolean }) {
       <section className="panel">
         {visible.length ? (
           visible.map((n) => {
-            const id = n.href?.split("/").pop();
-            const missing =
-              n.href?.includes("/warranties/") || n.href?.includes("/reviews/")
-                ? !state.warranties.some((w) => w.id === id)
-                : false;
+            // A bounded workspace snapshot cannot establish that a record was deleted.
+            const missing = false;
             return (
               <article
                 className={`notification-item ${!n.readAt ? "is-unread" : ""}`}
@@ -100,8 +97,8 @@ export function NotificationsPage({ admin = false }: { admin?: boolean }) {
             }
             description={
               tab === "unread"
-                ? "Anda sudah mengikuti seluruh aktivitas demo."
-                : "Notifikasi demo akan tampil di sini."
+                ? "Anda sudah mengikuti seluruh aktivitas."
+                : "Notifikasi akan tampil di sini."
             }
           />
         )}

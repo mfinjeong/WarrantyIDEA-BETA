@@ -1,0 +1,212 @@
+{
+  "passed": false,
+  "security_concerns": [
+    {
+      "id": "SEC-01",
+      "severity": "high",
+      "blocking": true,
+      "known_issue": false,
+      "file": "src/lib/server/auth.ts",
+      "lines": "42-50, 59",
+      "title": "Auth rate limits are shared by every client, allowing unauthenticated global login/signup denial of service",
+      "evidence": "The application explicitly sets ipAddressHeaders: []. Better Auth v1.7.10 getIP iterates this empty array, then returns null in production. The pinned upstream rate limiter substitutes the shared no-trusted-ip key, not a per-client key. Both sign-in/email and sign-up/email are configured for max 5 / window 60. Thus unrelated legitimate users share the same per-path allowance, and one unauthenticated client submitting valid-shaped attempts can exhaust it. The app's logger is disabled, hiding the library's shared-bucket warning. This is source-derived; no requests were sent.",
+      "recommendation": "Use a deliberately configured proxy-overwritten client-IP header and restrict direct upstream access, or implement an equivalent trusted application rate-limit key. Do not simply trust arbitrary client X-Forwarded-For, disable tracking, or increase the global allowance. Verify separate clients have separate buckets and spoofed forwarding headers cannot choose buckets in the production proxy configuration.",
+      "official_source_evidence": [
+        "better-auth/better-auth tag v1.7.10, packages/core/src/utils/ip.ts:332-360: explicit empty ipAddressHeaders yields no production IP",
+        "better-auth/better-auth tag v1.7.10, packages/better-auth/src/api/rate-limiter/index.ts:314-342, 362-389: missing IP becomes a shared per-path bucket; configured custom rules set its allowance"
+      ]
+    },
+    {
+      "id": "SEC-02",
+      "severity": "high",
+      "blocking": true,
+      "known_issue": true,
+      "status": "Parent's identity fix was visibly in progress; mutation binding still absent at final observation",
+      "file": "src/lib/demo/provider.tsx",
+      "lines": "128-156; src/lib/server/session.ts:5-10",
+      "title": "Stale browser mutations are not yet bound to the account whose form produced them",
+      "evidence": "At 2026-10-18T11:35:27.716849+00:00, mutate sent method/body only and requireUser returned the cookie session without comparing an expected identity. If a form opened as A remains live while another tab changes the shared cookie to B, submitting an account-global mutation such as POST /api/warranties or PATCH /api/profile acts on B using A's UI values. Existing owner checks correctly prevent editing A's record by ID as B, but do not prevent creating a new record in B or overwriting B's profile. Newly observed profile.id, keyed Shell content, identity-change asset clearing, and focus-time hidden/inert UI address major portions of the known state leak; they do not by themselves bind a request to its originating identity.",
+      "recommendation": "Finish the planned expected-identity header from the originating render/repository and compare it with the authoritative session for every application mutation; reject mismatches before side effects. Re-review the completed concurrent patch rather than treating this timed snapshot as its final verdict. Guard post-await callbacks belonging to an old identity so they cannot restore previews/drafts or navigate after identity changes."
+    }
+  ],
+  "logic_errors": [
+    {
+      "id": "LOGIC-01",
+      "severity": "medium",
+      "blocking": true,
+      "known_issue": false,
+      "file": "src/lib/server/service.ts",
+      "lines": "121-174, 214-255; src/lib/server/validation.ts:84-92; src/features/catalog/reviews.tsx:189-195, 292-305",
+      "title": "Admin decisions can approve a different warranty revision than the one actually reviewed",
+      "evidence": "ReviewDetail renders a previously fetched workspace item and submits only id/status/note. reviewInput has no expected revision. reviewWarranty reads the current record and updates by id only; the fetched old value is used only to check existence. A buyer can edit product/purchase/expiry details after the admin opens the review screen and before the admin submits. saveWarranty resets pending, but the subsequent stale admin request approves the newly changed details without a conflict. Two admins can likewise overwrite each other's intervening decisions. The issue exists sequentially and does not require a narrow transaction timing race.",
+      "recommendation": "Return a revision token with review data, require it in review requests, and atomically condition the decision update on the revision observed by the admin. Increment that revision on every buyer edit and review change; return 409 and require a reload when it differs. An integer revision is preferable to relying on timestamp precision. Keep notifications/activity in the same transaction as the successful conditional decision."
+    },
+    {
+      "id": "LOGIC-02",
+      "severity": "medium",
+      "blocking": true,
+      "known_issue": false,
+      "file": "src/lib/format.ts",
+      "lines": "3-5, 23-36; src/lib/demo/validation.ts:32-34; src/lib/server/validation.ts:2-14, 61-67; src/lib/server/service.ts:47-50, 60-75, 257-275",
+      "title": "Browser warranty status and purchase-date validation disagree with the server business calendar",
+      "evidence": "Server filtering, counts, reminders and purchase validation use APP_TIMEZONE (default Asia/Jakarta). Browser today() instead uses the device's local year/month/day, and warrantyStatus/remaining plus client purchase validation call it. A browser whose calendar is still October 17 while Jakarta is October 18 labels an October 17 expiry as expiring/today, while the server places it in expired. Dashboard counts and the corresponding list badges disagree; client validation can reject a purchase date that the business-calendar server accepts. Conversely, browsers ahead of the business date can accept a form that the API rejects. APP_TIMEZONE is not sent to the client.",
+      "recommendation": "Expose the configured business timezone/calendar day in the authenticated bootstrap contract and use a shared calendar helper for browser validation, badges, remaining/progress and dashboard lists. Keep the public environment setting nonsecret and do not expose the entire server environment. Account for day rollover instead of permanently freezing the day at initial load."
+    }
+  ],
+  "suggestions": [
+    {
+      "id": "SUG-01",
+      "severity": "low",
+      "blocking": false,
+      "known_issue": true,
+      "file": "prisma/schema.prisma",
+      "lines": "146-180; prisma/migrations/202610180001_initial/migration.sql:120-146, 237-247",
+      "title": "Duplicate purchase/warranty ownership is not enforced by a database constraint",
+      "evidence": "Warranty.ownerId and Purchase.ownerId each reference User independently; the purchaseId foreign key does not include ownerId. Current API creation sets both from the same session, and the application exposes no owner reassignment, so no present HTTP ownership bypass was found. The database nevertheless permits an internally inconsistent link and service DTOs trust the linked purchase.",
+      "recommendation": "Add an ownership-consistent composite relation/constraint, or remove duplicated ownership and authorize through the purchase owner. Use a forward migration if the initial migration has already been deployed; inspect existing data before adding a constraint."
+    },
+    {
+      "id": "SUG-02",
+      "severity": "low",
+      "blocking": false,
+      "known_issue": true,
+      "file": "prisma/migrations/202610180001_initial/migration.sql",
+      "lines": "104-129; prisma/schema.prisma:131-158",
+      "title": "Price and catalog duration have API validation but no SQL CHECK constraints",
+      "evidence": "SQL permits negative/out-of-contract price and warrantyMonths values; server Zod validation correctly enforces price 0..999999999999 and months 1..120. This is defense in depth, not a demonstrated API bypass.",
+      "recommendation": "Add SQL CHECK constraints matching the server contract through a safe reviewed migration."
+    },
+    {
+      "id": "SUG-03",
+      "severity": "medium",
+      "blocking": false,
+      "known_issue": false,
+      "file": "src/lib/server/service.ts",
+      "lines": "277-301, 303-327; API.md:48-53",
+      "title": "Workspace bootstrap is unbounded despite separate paginated listing",
+      "evidence": "workspace findMany loads every authorized warranty, catalog row and notification without take; admin scope loads every user's warranties. reminders also loads every expiring warranty and performs one upsert per row. Each successful mutation triggers another full workspace fetch in the client. This defeats the practical size limit of the paginated warranty endpoint. No runtime load benchmark was performed, so no specific outage threshold is asserted.",
+      "recommendation": "Define bounded bootstrap sections with counts, and paginated owner/admin endpoints for full lists. Preserve correct admin review detail lookup and notification behavior when introducing bounds; do not silently truncate the current all-record-dependent UI. Add application/proxy abuse controls before public traffic."
+    },
+    {
+      "id": "SUG-04",
+      "severity": "low",
+      "blocking": false,
+      "known_issue": false,
+      "file": "src/lib/server/service.ts",
+      "lines": "103-118; src/features/warranties/list.tsx:85-90, 335-350",
+      "title": "Deleting the last item on the final page leaves an invalid empty page",
+      "evidence": "API returns q.page unchanged even if total/pages shrink, and UI uses that returned page without clamping or redirecting. Removing the sole item on page 2 can leave page 2 of 1 with an empty-state message while page 1 still contains data. Previous navigation provides a recovery path.",
+      "recommendation": "On changed totals, replace the URL with the final valid page and refetch, or explicitly define and implement server page clamping."
+    }
+  ],
+  "summary": "Read-only source/diff review found an additional high-severity shared-auth-rate-bucket denial-of-service issue and concrete stale-review-revision and business-timezone logic errors. The known account-switch fix was partially present but expected-identity mutation checks were not yet present at the final timed source read. No additional direct unauthenticated API access, buyer-to-admin role injection, or owner-ID authorization bypass was found in the reviewed handlers. passed=false is a source-review verdict, not a test result.",
+  "observation": {
+    "started_at_utc": "2026-10-18T11:31:30.666554+00:00",
+    "last_targeted_source_read_at_utc": "2026-10-18T11:35:27.716849+00:00",
+    "concurrency": "Parent edited live sources during review. Initial reads lacked profile.id and identity asset clearing; later reads contained both plus Shell keyed content and checkingIdentity. This is a timed working-tree review, not an atomic commit snapshot or approval of edits made afterward.",
+    "selected_hashes_at_2026_10_18_11_35_04_utc": {
+      "src/lib/server/auth.ts": "d9d65e8aabd569c090382c042852bae53cc57de8b79d7a8f997cc2e618aa232e",
+      "src/lib/server/service.ts": "ce3fefd2cc4ab8ced0e8526eb0d51596a55d5f9ea5781c0593c61782000ec866",
+      "src/lib/server/session.ts": "a9030890aee4eb688f7e0ea21aae12bbc4f75748489031ce44f6dee7de356845",
+      "src/lib/demo/provider.tsx": "7353ce6debd39f7fc1685f7f895e482585b79559d06b2ef60dd221b149e333be",
+      "src/components/layout/shell.tsx": "65ea3af681198b15985626cdf0d9571d53ba22786f6f8888430cf19e78a62a1a",
+      "src/lib/server/validation.ts": "f65022a817607d17d754b5e1925c0c24b18e20fc99b821e98335f2c45d2918ff",
+      "src/lib/format.ts": "4f4d23397e2666aa3162e68cbe38ff134a37c785ca2ed6bf4e2256ea6e83b6d1"
+    }
+  },
+  "verification_scope": {
+    "performed": [
+      "Executed git status, git diff --stat/name-only, git ls-files --others --exclude-standard, security-relevant source diffs, and direct numbered-file reads including untracked API/server/Prisma/deployment sources",
+      "Read every API handler and traced authentication, role and ownership into shared service functions",
+      "Inspected production-origin validation, cookies/session configuration, strict request schemas, JSON size limits, no-store responses and sanitized error mapping",
+      "Inspected Prisma schema, initial SQL, provision/runtime grant scripts and production launcher without executing them",
+      "Inspected browser provider, API/auth clients, Shell, auth/profile/warranty/review/catalog/notification/scan state paths",
+      "Checked only official Better Auth upstream sources at the pinned v1.7.10 tag for ambiguous IP/rate-limiter behavior"
+    ],
+    "not_performed": [
+      "No tests, build, typecheck, lint, browser runtime reproduction or dependency audit executed",
+      "No database connection, query, migration, data change, networking/firewall change, Git identity/commit/push or application source modification",
+      "No secret env files or test credentials read; test files and generated/node_modules trees excluded from content review",
+      "Production proxy/listeners/certificates/permissions were not inspected; deployment documentation is not proof of live configuration"
+    ],
+    "only_requested_repository_write": "SECURITY_REVIEW.json"
+  },
+  "handler_authorization_review": [
+    { "file": "src/app/api/auth/[...all]/route.ts", "result": "Only signup/signin/signout/get-session are allowlisted; unsafe methods get exact Origin checks. Signup/signin have strict schemas and bounded JSON. Role injection is rejected by schema and role input:false. Callback origin is restricted. Library handles session cookies; shared rate bucket is SEC-01." },
+    { "file": "src/app/api/catalog/route.ts", "result": "POST requires authenticated session, then upsertCatalog requires admin; only validated catalog fields are assigned." },
+    { "file": "src/app/api/dashboard/route.ts", "result": "GET requires session; buyer counts filter ownerId; admin scope explicitly checks role." },
+    { "file": "src/app/api/notifications/[id]/route.ts", "result": "PATCH requires session; markNotification finds own userId and limits nonadmin audience to buyer before update." },
+    { "file": "src/app/api/notifications/route.ts", "result": "PATCH requires session; mark-all limits userId and audience; admin audience explicitly requires admin." },
+    { "file": "src/app/api/profile/route.ts", "result": "PATCH requires session; strict profile schema permits only name/reminders; updates target session user ID." },
+    { "file": "src/app/api/reviews/[id]/route.ts", "result": "POST requires session plus admin service check; cross-owner review is intentionally admin-authorized. Missing revision binding is LOGIC-01." },
+    { "file": "src/app/api/warranties/[id]/route.ts", "result": "GET/PUT/DELETE require session; ownerId is checked before read/update/delete, including for admins in their buyer workspace. Linked purchase changes occur after owner authorization." },
+    { "file": "src/app/api/warranties/route.ts", "result": "GET owner-scopes validated pagination/search; POST derives purchase/warranty ownership from session and rejects arbitrary owner/review fields." },
+    { "file": "src/app/api/workspace/route.ts", "result": "GET requires session; buyer data/notifications/settings are user-scoped; admin cross-user warranty/activity data requires admin. Unbounded result sets noted in SUG-03." }
+  ],
+  "positive_source_findings": [
+    "Production authOrigin rejects HTTP including loopback; auth cookies are explicitly HttpOnly/SameSite=Lax/Secure for HTTPS; cookie cache is disabled and server session reads remain authoritative.",
+    "All application mutation handlers use endpoint/checkOrigin with exact configured origin; no permissive CORS headers were found in the reviewed app/config. No assumption is made about an uninspected external proxy.",
+    "Role is a database enum defaulting to buyer and Better Auth additional role input is disabled. Signup/profile/warranty JSON are strict, preventing ownership/status/role mass assignment.",
+    "No raw interpolated SQL or user-controlled shell execution was found in reviewed runtime server sources; Prisma data calls are structured. Generic application/database errors are sanitized; DTOs omit password/account/session token data.",
+    "Initial SQL is scoped through warrantyidea search_path; migration role/runtime role separation, collision refusal and migration-history privilege revocation are explicitly scripted. Scripts were reviewed only, not applied.",
+    "Current browser provider no longer loads private live workspace state from demo localStorage. Receipts are in-memory blob URLs, not persisted uploads. Major portions of parent identity cleanup were directly observed rather than assumed complete."
+  ],
+  "reviewed_files": [
+    ".gitignore",
+    "package.json",
+    "next.config.ts",
+    "next-env.d.ts (diff)",
+    "playwright.config.ts (diff)",
+    "API.md",
+    "DEPLOYMENT.md",
+    "prisma.config.ts",
+    "prisma/schema.prisma",
+    "prisma/migrations/202610180001_initial/migration.sql",
+    "deploy/provision.sql",
+    "deploy/runtime-grants.sql",
+    "deploy/run-production.ps1",
+    "src/app/api/auth/[...all]/route.ts",
+    "src/app/api/catalog/route.ts",
+    "src/app/api/dashboard/route.ts",
+    "src/app/api/notifications/[id]/route.ts",
+    "src/app/api/notifications/route.ts",
+    "src/app/api/profile/route.ts",
+    "src/app/api/reviews/[id]/route.ts",
+    "src/app/api/warranties/[id]/route.ts",
+    "src/app/api/warranties/route.ts",
+    "src/app/api/workspace/route.ts",
+    "src/lib/server/auth.ts",
+    "src/lib/server/config.ts",
+    "src/lib/server/db.ts",
+    "src/lib/server/http.ts",
+    "src/lib/server/session.ts",
+    "src/lib/server/service.ts",
+    "src/lib/server/validation.ts",
+    "src/lib/server/test-safety.ts",
+    "src/lib/api-client.ts",
+    "src/lib/auth-client.ts",
+    "src/lib/demo/provider.tsx",
+    "src/lib/demo/types.ts",
+    "src/lib/demo/validation.ts",
+    "src/lib/format.ts",
+    "src/components/layout/shell.tsx",
+    "src/components/layout/marketing-header.tsx (diff)",
+    "src/components/ui/index.tsx:250-504",
+    "src/app/admin/(workspace)/layout.tsx (diff)",
+    "src/app/app/layout.tsx (diff)",
+    "src/app/layout.tsx (diff)",
+    "src/app/page.tsx (diff)",
+    "src/features/profile/auth.tsx",
+    "src/features/profile/profile.tsx",
+    "src/features/warranties/form.tsx",
+    "src/features/warranties/list.tsx",
+    "src/features/warranties/detail.tsx",
+    "src/features/warranties/dashboard.tsx",
+    "src/features/warranties/receipt.tsx",
+    "src/features/catalog/reviews.tsx",
+    "src/features/catalog/catalog.tsx",
+    "src/features/catalog/admin-dashboard.tsx",
+    "src/features/notifications/notifications.tsx",
+    "src/features/scan/scan.tsx"
+  ]
+}

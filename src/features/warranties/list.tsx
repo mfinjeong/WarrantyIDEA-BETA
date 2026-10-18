@@ -16,12 +16,14 @@ import {
   Skeleton,
 } from "@/components/ui";
 import { useDemo } from "@/lib/demo/provider";
-import { categories, type Warranty } from "@/lib/demo/types";
+import { categories, type Warranty, type WarrantyPage } from "@/lib/demo/types";
 import { dateLabel, remaining, warrantyStatus } from "@/lib/format";
 import { ProductIdentity } from "./product";
 
 export function WarrantyList() {
-  const { state, repository } = useDemo();
+  const { state, repository, revision } = useDemo();
+  const [result, setResult] = useState<{ query: string; data?: WarrantyPage; error?: string } | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const params = useSearchParams();
   const path = usePathname();
   const router = useRouter();
@@ -63,27 +65,30 @@ export function WarrantyList() {
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
+  const requestQuery = new URLSearchParams();
+  for (const name of ["q", "status", "category", "sort", "page"]) {
+    const value = params.get(name);
+    if (value) requestQuery.set(name, value);
+  }
+  requestQuery.set("pageSize", "6");
+  const requestKey = requestQuery.toString();
+  useEffect(() => {
+    let active = true;
+    repository.queryWarranties(requestKey).then(data => {
+      if (active) setResult({ query: requestKey, data });
+    }).catch(error => {
+      if (active) setResult({ query: requestKey, error: error instanceof Error ? error.message : "Daftar gagal dimuat." });
+    });
+    return () => { active = false; };
+  }, [repository, requestKey, revision, attempt]);
   if (!state) return <Skeleton />;
-  const query = (params.get("q") || "").trim().toLowerCase();
-  let filtered = state.warranties.filter(
-    (w) =>
-      (!query ||
-        [w.productName, w.brand, w.model, w.serialNumber, w.store].some((s) =>
-          s.toLowerCase().includes(query),
-        )) &&
-      (!status || warrantyStatus(w.expiryDate) === status) &&
-      (!category || w.category === category),
-  );
-  filtered = [...filtered].sort((a, b) =>
-    sort === "expiry"
-      ? a.expiryDate.localeCompare(b.expiryDate)
-      : sort === "name"
-        ? a.productName.localeCompare(b.productName, "id")
-        : b.createdAt.localeCompare(a.createdAt),
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / 6));
-  const page = Math.min(pages, Math.max(1, Number(params.get("page")) || 1));
-  const visible = filtered.slice((page - 1) * 6, page * 6);
+  const pending = result?.query !== requestKey;
+  const data = !pending ? result?.data : undefined;
+  const visible = data?.items || [];
+  const total = data?.total;
+  const page = data?.page || 1;
+  const pages = data?.pages || 1;
+  const query = params.get("q") || "";
   const active = !!(query || status || category || sort !== "newest");
   const listUrl = `${path}${params.toString() ? `?${params}` : ""}`;
   const href = (w: Warranty) =>
@@ -164,7 +169,7 @@ export function WarrantyList() {
       <PageHeading
         eyebrow="ARSIP GARANSI ANDA"
         title="Garansi saya"
-        description={`${state.warranties.length} produk, satu tempat yang lebih rapi.`}
+        description={`${state.stats.total} produk, satu tempat yang lebih rapi.`}
       >
         <ActionLink href="/app/warranties/new">
           <Plus size={18} />
@@ -208,7 +213,7 @@ export function WarrantyList() {
           </Button>
         </div>
         <div className="collection-meta">
-          <span>{filtered.length} garansi ditemukan</span>
+          <span>{total === undefined ? "Memuat daftar…" : `${total} garansi ditemukan`}</span>
           {active && (
             <button
               className="text-link"
@@ -221,20 +226,22 @@ export function WarrantyList() {
             </button>
           )}
         </div>
-        {!visible.length ? (
+        {pending ? <Skeleton /> : result?.error ? (
+          <div role="alert">{result.error}<Button onClick={() => { setResult(null); setAttempt(n => n + 1); }}>Coba lagi</Button></div>
+        ) : !visible.length ? (
           <Empty
             title={
-              state.warranties.length
+              state.stats.total
                 ? "Tidak ada garansi yang cocok"
                 : "Arsip pertama Anda dimulai di sini"
             }
             description={
-              state.warranties.length
+              state.stats.total
                 ? "Coba kata kunci atau filter lain."
                 : "Tambahkan produk agar tanggal garansinya mudah dipantau."
             }
           >
-            {state.warranties.length ? (
+            {state.stats.total ? (
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -332,14 +339,14 @@ export function WarrantyList() {
           <div>
             <Button
               variant="secondary"
-              disabled={page <= 1}
+              disabled={pending || page <= 1}
               onClick={() => update({ page: String(page - 1) })}
             >
               Sebelumnya
             </Button>
             <Button
               variant="secondary"
-              disabled={page >= pages}
+              disabled={pending || page >= pages}
               onClick={() => update({ page: String(page + 1) })}
             >
               Berikutnya
@@ -375,7 +382,7 @@ export function WarrantyList() {
       <ConfirmDialog
         open={!!remove}
         title="Hapus garansi?"
-        description={`Metadata demo ${remove?.productName || ""} dan preview lokalnya akan dihapus.`}
+        description={`Garansi ${remove?.productName || ""} dan preview lokalnya akan dihapus.`}
         onClose={() => setRemove(null)}
         onConfirm={() => repository.removeWarranty(remove!.id)}
         label="Hapus garansi"

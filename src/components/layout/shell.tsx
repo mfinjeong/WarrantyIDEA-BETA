@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import {
   Bell,
   ArrowUpRight,
@@ -22,9 +22,11 @@ import { Alert, Dialog, Logo } from "@/components/ui";
 
 export function ModeSwitcher() {
   const path = usePathname();
+  const { state } = useDemo();
+  if (state?.profile.role !== "admin") return null;
   return (
     <div className="mode-switch">
-      <span>JELAJAHI DEMO</span>
+      <span>RUANG KERJA</span>
       <div>
         <Link
           className={path.startsWith("/app") ? "is-selected" : ""}
@@ -51,7 +53,7 @@ export function Shell({
 }) {
   const path = usePathname();
   const [menu, setMenu] = useState(false);
-  const { state, warning } = useDemo();
+  const { state, warning, loading, checkingIdentity, refresh, logout } = useDemo();
   const root = admin ? "/admin" : "/app";
   const nav = admin
     ? ([
@@ -101,7 +103,9 @@ export function Shell({
     </nav>
   );
   return (
-    <div className={`app-shell ${admin ? "admin-shell" : ""}`}>
+    <>
+    {checkingIdentity && <div role="status" aria-busy="true">Memeriksa sesi akun…</div>}
+    <div hidden={checkingIdentity} inert={checkingIdentity} style={checkingIdentity ? { display: "none" } : undefined} className={`app-shell ${admin ? "admin-shell" : ""}`}>
       <aside className="sidebar">
         <Logo light={admin} />
         <span className="workspace-label">
@@ -133,9 +137,9 @@ export function Shell({
             />
           </div>
           <ModeSwitcher />
-          <Link href="/" className="exit-link">
-            <LogOut size={16} /> Keluar demo
-          </Link>
+          <button type="button" className="exit-link" onClick={() => void logout()}>
+                      <LogOut size={16} /> Keluar
+                    </button>
         </div>
       </aside>
       <div className="app-body">
@@ -152,7 +156,7 @@ export function Shell({
             <ChevronRight size={14} className="desktop-only" />
             <strong>{title}</strong>
             <span className="demo-label">
-              {admin ? "Admin · Demo" : "Demo"}
+              {admin ? "Admin" : "Pembeli"}
             </span>
           </div>
           <div className="header-right">
@@ -172,7 +176,7 @@ export function Shell({
               className="avatar"
               aria-label="Buka profil"
             >
-              {(state?.profile.name || "Alex Morgan")
+              {(state?.profile.name || "")
                 .split(" ")
                 .map((s) => s[0])
                 .join("")
@@ -181,8 +185,8 @@ export function Shell({
           </div>
         </header>
         <main id="main" className="app-main">
-          {warning && <Alert>{warning}</Alert>}
-          {children}
+          {warning && <Alert error>{warning} <button className="btn btn-secondary" onClick={() => void refresh()}>Coba lagi</button></Alert>}
+                    {state ? <Fragment key={state.profile.id}>{children}</Fragment> : !warning ? <div aria-busy="true">{loading ? "Memuat data…" : "Menyiapkan ruang kerja…"}</div> : null}
         </main>
       </div>
       {!admin && <div className="bottom-nav">{links}</div>}
@@ -194,10 +198,10 @@ export function Shell({
         <div className="drawer-nav">
           {links}
           <ModeSwitcher />
-          <Link href="/" onClick={() => setMenu(false)} className="exit-link">
-            <LogOut size={16} />
-            Keluar demo
-          </Link>
+          <button type="button" onClick={() => void logout()} className="exit-link">
+                      <LogOut size={16} />
+                      Keluar
+                    </button>
         </div>
         <button className="btn btn-secondary" onClick={() => setMenu(false)}>
           <X size={16} />
@@ -205,5 +209,6 @@ export function Shell({
         </button>
       </Dialog>
     </div>
+    </>
   );
 }

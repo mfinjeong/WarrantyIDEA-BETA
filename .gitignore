@@ -1,4 +1,5 @@
 node_modules/
+src/lib/server/generated/
 .next/
 out/
 coverage/

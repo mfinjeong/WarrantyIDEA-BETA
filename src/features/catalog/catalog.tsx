@@ -168,7 +168,7 @@ export function CatalogPage() {
         ) : (
           <Empty
             title="Produk belum ditemukan"
-            description="Ubah pencarian atau tambahkan produk demo baru."
+            description="Ubah pencarian atau tambahkan produk baru."
           >
             <Button
               variant="secondary"
@@ -232,7 +232,7 @@ function CatalogEditor({
     <Dialog
       open
       title={item.id ? "Edit produk" : "Tambah produk katalog"}
-      description="Gunakan detail produk fiktif untuk demonstrasi."
+      description="Perbarui detail produk yang tersedia di katalog."
       onClose={() => {
         if (!busy) onClose();
       }}

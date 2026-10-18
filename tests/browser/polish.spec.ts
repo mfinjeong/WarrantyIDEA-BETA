@@ -64,17 +64,7 @@ test("menu landing dengan keyboard dan pencarian dashboard tetap berfungsi", asy
     await expect(page).toHaveURL(/#fitur$/);
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   }
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  // Authenticated dashboard search is covered by generated-user integration tests.
   await page.goto("/app");
-  await expect(
-    page.getByRole("heading", { name: "Halo, Alex." }),
-  ).toBeVisible();
-  await page.getByLabel("Cari garansi", { exact: true }).fill("Sonic");
-  await page
-    .getByLabel("Status garansi", { exact: true })
-    .selectOption("expired");
-  await page.getByRole("button", { name: "Cari", exact: true }).click();
-  await expect(page).toHaveURL(/q=Sonic&status=expired/);
-  await expect(page.locator("tbody tr")).toHaveCount(1);
-  await expect(page.locator("tbody")).toContainText("Speaker portable");
+  await expect(page).toHaveURL(/\/login/);
 });

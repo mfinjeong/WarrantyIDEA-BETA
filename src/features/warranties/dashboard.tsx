@@ -33,16 +33,16 @@ export function BuyerDashboard() {
       </PageHeading>
       <div className="summary-strip">
         {[
-          ["Total garansi", all.length, "Semua tersimpan rapi", ""],
+          ["Total garansi", state.stats.total, "Semua tersimpan rapi", ""],
           [
             "Garansi aktif",
-            all.filter((w) => warrantyStatus(w.expiryDate) === "active").length,
+            state.stats.active,
             "Masih dalam masa berlaku",
             "active",
           ],
           [
             "Segera berakhir",
-            expiring.length,
+            state.stats.expiring,
             "Perlu sedikit perhatian",
             "expiring",
           ],

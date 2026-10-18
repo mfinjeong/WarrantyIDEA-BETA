@@ -11,7 +11,7 @@ import {
   Missing,
   Skeleton,
 } from "@/components/ui";
-import { useDemo } from "@/lib/demo/provider";
+import { useDemo, useWarranty } from "@/lib/demo/provider";
 import { categories, type Warranty } from "@/lib/demo/types";
 import {
   dateLabel,
@@ -52,12 +52,13 @@ export function WarrantyInformation({ item }: { item: Warranty }) {
   );
 }
 export function WarrantyDetail({ id }: { id: string }) {
-  const { state, repository } = useDemo();
+  const { repository } = useDemo();
+  const { item, loading, error, retry } = useWarranty(id);
   const router = useRouter();
   const params = useSearchParams();
   const [remove, setRemove] = useState(false);
-  if (!state) return <Skeleton />;
-  const item = state.warranties.find((w) => w.id === id);
+  if (loading) return <Skeleton />;
+  if (error) return <div role="alert">{error}<Button onClick={retry}>Coba lagi</Button></div>;
   if (!item) return <Missing />;
   const from = params.get("from");
   const back =
@@ -99,11 +100,11 @@ export function WarrantyDetail({ id }: { id: string }) {
         <div>
           <WarrantyInformation item={item} />
           <section className="panel detail-information">
-            <h2>Tinjauan demo</h2>
+            <h2>Tinjauan garansi</h2>
             <Badge status={item.reviewStatus} />
             <p className="helper" style={{ marginTop: 16 }}>
               {item.reviewNote ||
-                "Status tinjauan hanya berlaku untuk demonstrasi dan bukan verifikasi keaslian produk."}
+                "Status tinjauan dicatat oleh admin dan bukan jaminan keaslian produk."}
             </p>
           </section>
         </div>
@@ -136,7 +137,7 @@ export function WarrantyDetail({ id }: { id: string }) {
       <ConfirmDialog
         open={remove}
         title="Hapus garansi?"
-        description={`Metadata demo ${item.productName} dan preview lokalnya akan dihapus.`}
+        description={`Garansi ${item.productName} dan preview lokalnya akan dihapus.`}
         onClose={() => setRemove(false)}
         onConfirm={async () => {
           await repository.removeWarranty(id);

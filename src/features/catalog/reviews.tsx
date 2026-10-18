@@ -10,7 +10,7 @@ import {
   XCircle,
 } from "lucide-react";
 import {
-  ActionLink,
+
   Alert,
   Badge,
   Button,
@@ -59,7 +59,7 @@ export function ReviewsPage() {
       <PageHeading
         eyebrow="ADMIN / ANTREAN TINJAUAN"
         title="Tinjauan garansi"
-        description="Periksa detail dan coba alur keputusan demo."
+        description="Periksa detail dan catat keputusan tinjauan."
       />
       <Tabs
         value={status}
@@ -210,10 +210,10 @@ export function ReviewDetail({ id }: { id: string }) {
       <PageHeading
         eyebrow="ADMIN / TINJAUAN GARANSI"
         title="Periksa setiap detail."
-        description="Tinjau informasi sebelum menentukan status demo."
+        description="Tinjau informasi sebelum menentukan status garansi."
       />
       <Alert>
-        Keputusan hanya mengubah status demo; tidak memverifikasi keaslian
+        Keputusan mencatat hasil tinjauan; tidak menjamin keaslian
         produk.
       </Alert>
       <div className="detail-hero">
@@ -234,8 +234,8 @@ export function ReviewDetail({ id }: { id: string }) {
             {item.reviewStatus === "pending" ? (
               <>
                 <p className="helper">
-                  Periksa detail produk dan bukti contoh yang tersedia. Ini
-                  bukan verifikasi dokumen sungguhan.
+                  Periksa detail produk yang tersedia. Preview nota bersifat
+                  lokal dan bukan bukti yang diunggah ke server.
                 </p>
                 <div className="review-actions">
                   <Button onClick={() => setAction("approved")}>
@@ -255,7 +255,7 @@ export function ReviewDetail({ id }: { id: string }) {
               <>
                 <Badge status={item.reviewStatus} />
                 <p className="helper mt-4">
-                  {item.reviewNote || "Keputusan demo telah dicatat."}
+                  {item.reviewNote || "Keputusan tinjauan telah dicatat."}
                 </p>
                 <Button
                   variant="secondary"
@@ -267,9 +267,7 @@ export function ReviewDetail({ id }: { id: string }) {
               </>
             )}
           </section>
-          <ActionLink href={`/app/warranties/${id}`} secondary>
-            Lihat di mode pembeli <ArrowRight size={15} />
-          </ActionLink>
+
         </div>
         <ReceiptDisplay id={id} sample={!!item.receiptDemoAssetId} />
       </div>
@@ -277,15 +275,15 @@ export function ReviewDetail({ id }: { id: string }) {
         open={!!action}
         title={
           action === "approved"
-            ? "Setujui tinjauan demo?"
+            ? "Setujui tinjauan garansi?"
             : action === "rejected"
-              ? "Tolak tinjauan demo?"
+              ? "Tolak tinjauan garansi?"
               : "Kembalikan ke antrean?"
         }
         description={
           action === "pending"
             ? "Keputusan sebelumnya akan dihapus dan status menjadi menunggu tinjauan."
-            : `Keputusan untuk ${item.productName} hanya berlaku dalam demo lokal.`
+            : `Keputusan untuk ${item.productName} akan disimpan dan pembeli menerima notifikasi.`
         }
         onClose={close}
       >
@@ -304,7 +302,9 @@ export function ReviewDetail({ id }: { id: string }) {
             setBusy(true);
             setError("");
             try {
-              await repository.review(id, action!, note);
+              if (item.revision === undefined)
+                throw new Error("Muat ulang garansi sebelum menyimpan keputusan.");
+              await repository.review(id, action!, item.revision, note);
               setAction(null);
               setNote("");
             } catch (e) {

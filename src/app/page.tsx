@@ -38,7 +38,7 @@ export default function Landing() {
             </p>
             <div className="button-row">
               <ActionLink href="/app">
-                Coba demo pembeli <ArrowRight size={18} />
+                Buka arsip saya <ArrowRight size={18} />
               </ActionLink>
               <ActionLink href="#cara-kerja" secondary>
                 Lihat cara kerja <ArrowDown size={17} />
@@ -46,10 +46,10 @@ export default function Landing() {
             </div>
             <div className="hero-footnote">
               <span>
-                <Check size={15} /> Tanpa membuat akun
+                <Check size={15} /> Arsip pribadi dengan akun Anda
               </span>
               <Link href="/admin">
-                Jelajahi demo admin{" "}
+                Masuk ruang admin{" "}
                 <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </div>
@@ -192,7 +192,7 @@ export default function Landing() {
                 mudah dilihat kembali.
               </h3>
               <p>
-                Pilih gambar nota untuk preview lokal. Pada demo ini, dokumen
+                Pilih gambar nota untuk preview lokal. Gambar dokumen
                 tidak diunggah atau disimpan.
               </p>
               <span className="feature-tag">PREVIEW LOKAL</span>
@@ -209,7 +209,7 @@ export default function Landing() {
                 Status aktif, segera berakhir, dan kedaluwarsa membantu
                 menentukan prioritas.
               </p>
-              <span className="feature-tag">PENGINGAT DEMO LOKAL</span>
+              <span className="feature-tag">PENGINGAT DALAM APLIKASI</span>
             </article>
             <article className="feature-panel">
               <span className="feature-number">04 / JELAJAHI</span>
@@ -252,7 +252,7 @@ export default function Landing() {
                 [
                   "03",
                   "Pantau dari satu tempat",
-                  "Lihat masa berlaku dan kelola arsip kapan pun di demo ini.",
+                  "Lihat masa berlaku dan kelola arsip tersimpan setelah masuk.",
                 ],
               ].map(([number, title, copy]) => (
                 <article key={number}>
@@ -272,10 +272,10 @@ export default function Landing() {
               <br />
               tempat yang <em>semestinya.</em>
             </h2>
-            <p>Jelajahi WarrantyIDEA dengan data contoh. Tanpa akun.</p>
+            <p>Buat akun dan simpan metadata garansi dalam arsip pribadi Anda.</p>
           </div>
-          <ActionLink href="/app">
-            Mulai jelajahi demo <ArrowRight size={18} />
+          <ActionLink href="/register">
+            Buat akun <ArrowRight size={18} />
           </ActionLink>
         </section>
       </main>
@@ -284,8 +284,8 @@ export default function Landing() {
         <p>Arsip kecil. Rasa tenang yang lebih besar.</p>
         <div>
           <Link href="#fitur">Fitur</Link>
-          <Link href="/admin">Demo admin</Link>
-          <span>Frontend demo · © 2026 WarrantyIDEA</span>
+          <Link href="/admin/login">Masuk admin</Link>
+          <span>© 2026 WarrantyIDEA</span>
         </div>
       </footer>
     </>

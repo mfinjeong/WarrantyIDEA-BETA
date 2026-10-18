@@ -1,10 +1,14 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { ActionLink, Logo } from "@/components/ui";
+const subscribe = () => () => {};
+const hydrated = () => true;
+const serverRendered = () => false;
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
+  const ready = useSyncExternalStore(subscribe, hydrated, serverRendered);
   const header = useRef<HTMLElement>(null);
   const nav = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -54,11 +58,12 @@ export function MarketingHeader() {
           <Link href="/login" className="desktop-only">
             Masuk
           </Link>
-          <ActionLink href="/app">
-            Coba demo <ArrowUpRight size={16} aria-hidden="true" />
+          <ActionLink href="/register">
+            Mulai sekarang <ArrowUpRight size={16} aria-hidden="true" />
           </ActionLink>
           <button
             ref={toggle}
+            disabled={!ready}
             className="icon-btn mobile-menu"
             aria-label={open ? "Tutup menu" : "Buka menu"}
             aria-expanded={open}

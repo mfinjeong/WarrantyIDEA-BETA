@@ -12,7 +12,7 @@ import {
   PageHeading,
   Skeleton,
 } from "@/components/ui";
-import { useDemo } from "@/lib/demo/provider";
+import { useDemo, useWarranty } from "@/lib/demo/provider";
 import {
   categories,
   type Warranty,
@@ -24,8 +24,9 @@ import { ReceiptUpload } from "./receipt";
 
 export function WarrantyForm({ id }: { id?: string }) {
   const { state } = useDemo();
-  if (!state) return <Skeleton />;
-  const item = state.warranties.find((w) => w.id === id);
+  const { item, loading, error, retry } = useWarranty(id);
+  if (!state || loading) return <Skeleton />;
+  if (error) return <Alert error>{error}<Button onClick={retry}>Coba lagi</Button></Alert>;
   if (id && !item) return <Missing />;
   return <WarrantyEditor key={id || "new"} item={item} />;
 }
@@ -209,8 +210,8 @@ function WarrantyEditor({ item }: { item?: Warranty }) {
         description="Isi detailnya sekarang. Lebih mudah ditemukan nanti."
       />
       <Alert>
-        Gunakan data fiktif. Jangan masukkan dokumen atau data pribadi. Metadata
-        demo disimpan di browser ini.
+        Detail garansi disimpan di akun Anda. Gambar nota hanya preview lokal,
+        tidak diunggah dan hilang setelah halaman dimuat ulang.
       </Alert>
       <form noValidate onSubmit={submit}>
         {submitted && Object.keys(errors).length > 0 && (
@@ -287,13 +288,13 @@ function WarrantyEditor({ item }: { item?: Warranty }) {
               label="Nomor seri"
               required
               error={error("serialNumber")}
-              helper="Gunakan nomor seri fiktif yang unik."
+              helper="Gunakan nomor seri yang unik dalam arsip Anda."
             >
               <input
                 {...attrs("serialNumber")}
                 maxLength={80}
                 required
-                placeholder="DEMO-XXXX-0001"
+                placeholder="SN-XXXX-0001"
               />
             </Field>
           </div>
@@ -313,7 +314,7 @@ function WarrantyEditor({ item }: { item?: Warranty }) {
                   {...attrs("store")}
                   maxLength={100}
                   required
-                  placeholder="Nama toko demo"
+                  placeholder="Nama toko"
                 />
               </Field>
             </div>
