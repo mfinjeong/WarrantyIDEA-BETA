@@ -5,6 +5,15 @@ import {
   Headphones,
   Laptop,
   Speaker,
+  Package,
+  Smartphone,
+  Tv,
+  Refrigerator,
+  WashingMachine,
+  Printer,
+  Gamepad2,
+  Tablet,
+  Monitor,
   Watch,
   Wind,
   Blender,
@@ -18,26 +27,45 @@ export function ProductIcon({
   large?: boolean;
 }) {
   const n = name.toLowerCase();
-  const Icon = n.includes("headphone")
+  const Icon = /headphone|headset|earbud/.test(n)
     ? Headphones
-    : n.includes("kopi")
+    : /kopi|coffee/.test(n)
       ? Coffee
       : n.includes("laptop")
         ? Laptop
         : n.includes("purifier")
           ? Wind
-          : n.includes("kamera")
+          : /kamera|camera/.test(n)
             ? Camera
-            : n.includes("watch")
+            : /watch|jam tangan/.test(n)
               ? Watch
               : n.includes("blender")
                 ? Blender
-                : Speaker;
+                : /speaker|pengeras suara/.test(n)
+                  ? Speaker
+                  : /smartphone|handphone|ponsel|iphone/.test(n)
+                    ? Smartphone
+                    : /televisi|\btv\b/.test(n)
+                      ? Tv
+                      : /kulkas|refrigerator/.test(n)
+                        ? Refrigerator
+                        : /mesin cuci|washing/.test(n)
+                          ? WashingMachine
+                          : /printer/.test(n)
+                            ? Printer
+                            : /konsol|playstation|xbox|gamepad/.test(n)
+                              ? Gamepad2
+                              : /tablet|ipad/.test(n)
+                                ? Tablet
+                                : /monitor/.test(n)
+                                  ? Monitor
+                                  : Package;
   return (
     <span
+      aria-hidden="true"
       className={`product-icon ${large ? "product-icon-large" : ""} product-tone-${n.length % 4}`}
     >
-      <Icon size={large ? 52 : 25} strokeWidth={1.5} />
+      <Icon size={large ? 52 : 25} strokeWidth={1.5} aria-hidden="true" />
     </span>
   );
 }

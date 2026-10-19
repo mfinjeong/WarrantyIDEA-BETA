@@ -7,7 +7,7 @@ Arsip garansi pribadi berbasis **Next.js App Router + TypeScript**, PostgreSQL 1
 - Login/registrasi memakai akun dan sesi server, bukan pemilih mode demo. Data bisnis dibaca/diubah lewat Route Handlers dan database, bukan localStorage.
 - Pengguna hanya dapat membaca/mengubah garansinya sendiri. Area katalog/tinjauan admin memerlukan role admin yang ditetapkan server/administrator, bukan input registrasi.
 - Password di-hash dengan Argon2id; session cookie HttpOnly, SameSite dan Secure untuk deployment HTTPS. Input divalidasi server-side; mutasi dibatasi Origin yang sah.
-- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Verifikasi lokal: lint/typecheck lolos; 25 tes lolos dan 8 tes database dilewati tanpa konfigurasi database test terisolasi.
+- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Verifikasi lokal: lint/typecheck lolos; 28 tes lolos dan 8 tes database dilewati tanpa konfigurasi database test terisolasi.
 - Tidak ada commit/push, perubahan identitas Git, publikasi port, atau perubahan firewall otomatis.
 
 ## Persiapan
@@ -77,6 +77,8 @@ Database-writing integration/browser tests harus memakai **database test terisol
 - `tests`: unit/domain/backend, HTTP terisolasi, dan browser.
 
 ## Aset tampilan
+
+Ikon dashboard memakai aset SVG dari [Lucide](https://lucide.dev/guide/) dan ikon turunannya dari Feather. Ilustrasi arsip memakai **Card file box** karya **Sina Schulz / OpenMoji**, tercatat dibuat **18 April 2018**, dengan [sumber SVG yang dipin](https://github.com/hfg-gmuend/openmoji/blob/4d1486fac1a46be7e3becdb809b0210e586f2555/color/svg/1F5C3.svg) dan lisensi CC BY-SA 4.0. Atribusi tersedia di `public/licenses/openmoji-attribution.txt`; SVG tidak dimodifikasi. Library ikon sudah ada di proyek; tidak ada generator gambar atau library chart tambahan untuk dashboard. Teks lisensi ISC/MIT tersedia di `public/licenses/lucide.txt`. Grafik status memakai hitungan akun dari server, bukan data contoh atau riwayat tren rekaan.
 
 Foto produk contoh di `public/images/` bersumber dari Unsplash: [headphone](https://images.unsplash.com/photo-1546435770-a3e426bf472b) dan [kamera](https://images.unsplash.com/photo-1516035069371-29a1b244cc32). Sumber gambar asli: `images.unsplash.com/photo-1546435770-a3e426bf472b` dan `images.unsplash.com/photo-1516035069371-29a1b244cc32`. Penggunaan mengikuti [Unsplash License](https://unsplash.com/license). Foto hanya ilustrasi; detail garansi pada beranda adalah contoh fiktif, bukan data pengguna atau klaim kerja sama merek.
 
