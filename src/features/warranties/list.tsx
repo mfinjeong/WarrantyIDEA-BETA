@@ -169,7 +169,7 @@ export function WarrantyList() {
       <PageHeading
         eyebrow="ARSIP GARANSI ANDA"
         title="Garansi saya"
-        description={`${state.stats.total} produk, satu tempat yang lebih rapi.`}
+        description={`${state.stats.total} produk tercatat. Cari nama barang, merek, atau nomor serinya.`}
       >
         <ActionLink href="/app/warranties/new">
           <Plus size={18} />
@@ -233,7 +233,7 @@ export function WarrantyList() {
             title={
               state.stats.total
                 ? "Tidak ada garansi yang cocok"
-                : "Arsip pertama Anda dimulai di sini"
+                : "Belum ada garansi yang dicatat"
             }
             description={
               state.stats.total

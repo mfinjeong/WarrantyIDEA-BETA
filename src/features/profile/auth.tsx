@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
@@ -95,18 +96,19 @@ export function AuthPage({
         <div>
           <h2>
             {admin
-              ? "Setiap detail, ditinjau dengan teliti."
-              : "Barang favorit punya tempat untuk pulang."}
+              ? "Periksa garansi yang masuk."
+              : "Tanggal beli sering lupa. Nomor seri juga."}
           </h2>
           <p>
             {admin
-              ? "Kelola katalog dan jelajahi alur tinjauan garansi dalam satu ruang kerja."
-              : "Simpan detailnya, rapikan arsipnya, dan sisakan ruang untuk hal yang lebih penting."}
+              ? "Buka antrean tinjauan, periksa detail produk, lalu catat keputusan Anda."
+              : "Catat sekali di sini. Saat dibutuhkan, cari nama barangnya tanpa membongkar laci."}
           </p>
         </div>
         <div className="auth-archive" aria-hidden="true">
           <div className="auth-archive-tab"><FolderOpen size={20} /> Arsip pribadi</div>
-          <div className="auth-archive-row"><ShieldCheck size={24} /><span>Detail produk<strong>Tersusun di satu tempat</strong></span><Check size={18} /></div>
+          <Image src="/images/headphones.jpg" alt="" width={362} height={150} className="auth-product-photo" style={{ width: "100%", height: 150, objectFit: "cover", borderRadius: 8, marginTop: 12 }} />
+          <div className="auth-archive-row"><ShieldCheck size={24} /><span>Headphone · contoh arsip<strong>Tanggal beli dan nomor seri</strong></span><Check size={18} /></div>
           <div className="auth-archive-row"><FolderOpen size={24} /><span>Bukti pembelian<strong>Preview lokal di perangkat</strong></span><Check size={18} /></div>
         </div>
         <small>WARRANTYIDEA / ARSIP PRIBADI</small>
@@ -117,17 +119,16 @@ export function AuthPage({
             {admin
               ? "Ruang kerja admin"
               : register
-                ? "Mulai lebih teratur."
-                : "Senang melihat Anda."}
+                ? "Buat akun WarrantyIDEA"
+                : "Masuk ke arsip kamu"}
           </h1>
           <p>
             {register
-              ? "Buat akun untuk menyimpan arsip garansi."
+              ? "Setelah daftar, kamu bisa langsung mencatat garansi pertama."
               : admin
                 ? "Masuk menggunakan akun dengan peran admin."
-                : "Masuk dan temukan semua garansi Anda."}
+                : "Pakai email yang kamu daftarkan sebelumnya."}
           </p>
-          <Alert>Gunakan akun Anda untuk mengakses arsip pribadi.</Alert>
           {error && <Alert error>{error}</Alert>}
           <form noValidate onSubmit={submit} aria-busy={busy}>
             {register && (
@@ -141,7 +142,7 @@ export function AuthPage({
                   {...input("name")}
                   maxLength={60}
                   autoComplete="nickname"
-                  placeholder="Alex Demo"
+                  placeholder="Nama kamu"
                 />
               </Field>
             )}
@@ -150,7 +151,7 @@ export function AuthPage({
                 {...input("email")}
                 type="email"
                 autoComplete="email"
-                placeholder={admin ? "admin@example.test" : "alex@example.test"}
+                placeholder={admin ? "admin@example.test" : "nama@email.com"}
               />
             </Field>
             <Field
@@ -231,9 +232,9 @@ export function AuthPage({
 
           <div className="auth-form-footer">
             {register
-              ? "Sudah ingin menjelajah?"
+              ? "Sudah punya akun?"
               : admin
-                ? "Ingin mencoba sisi pembeli?"
+                ? "Bukan akun admin?"
                 : "Belum punya akun?"}
             <Link href={register ? "/login" : admin ? "/login" : "/register"}>
               {register

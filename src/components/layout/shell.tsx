@@ -123,12 +123,12 @@ export function Shell({
         <div className="sidebar-bottom">
           <div className="sidebar-note">
             <span className="tiny-label">
-              {admin ? "RUANG TINJAUAN" : "SEDIKIT LEBIH TENANG"}
+              {admin ? "RUANG TINJAUAN" : "ARSIP PRIBADI"}
             </span>
             <p>
               {admin
                 ? "Setiap detail layak diperiksa."
-                : "Barang favorit. Garansi terawat."}
+                : "Cari barangnya, lihat masa garansinya."}
             </p>
             <ArrowUpRight
               className="note-symbol"
@@ -161,7 +161,7 @@ export function Shell({
           </div>
           <div className="header-right">
             <span className="header-date desktop-only">
-              Arsip kecil, tenang lebih lama.
+              Tanggal beli dan masa garansi, tinggal cari.
             </span>
             <Link
               href={`${root}/notifications`}

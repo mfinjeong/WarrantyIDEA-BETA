@@ -136,7 +136,7 @@ export function Alert({
 }
 export function Empty({
   title = "Belum ada garansi",
-  description = "Mulai rapikan arsip produk pertama Anda.",
+  description = "Tambahkan nama barang, tanggal beli, dan tanggal garansinya.",
   children,
 }: {
   title?: string;
@@ -157,7 +157,7 @@ export function Empty({
 export function Skeleton() {
   return (
     <div className="loading-state" aria-busy="true" role="status">
-      <span className="sr-only">Memuat data demo</span>
+      <span className="sr-only">Memuat arsip garansi</span>
       <div className="skeleton sk-heading" />
       <div className="skeleton sk-summary" />
       <div className="skeleton sk-content" />
@@ -515,8 +515,8 @@ export function Missing({ admin = false }: { admin?: boolean }) {
           Ke beranda
         </ActionLink>
       </div>
-      <Link href="/app">Buka demo pembeli</Link>
-      <Link href="/admin">Jelajahi demo admin</Link>
+      <Link href="/app">Buka arsip saya</Link>
+      <Link href="/admin">Buka ruang admin</Link>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export function MarketingHeader() {
           className={open ? "marketing-links is-open" : "marketing-links"}
         >
           {[
-            ["#manfaat", "Manfaat"],
+            ["#contoh-arsip", "Contoh arsip"],
             ["#fitur", "Fitur"],
             ["#cara-kerja", "Cara kerja"],
           ].map(([href, label]) => (
@@ -59,7 +59,7 @@ export function MarketingHeader() {
             Masuk
           </Link>
           <ActionLink href="/register">
-            Mulai sekarang <ArrowUpRight size={16} aria-hidden="true" />
+            Catat garansi <ArrowUpRight size={16} aria-hidden="true" />
           </ActionLink>
           <button
             ref={toggle}

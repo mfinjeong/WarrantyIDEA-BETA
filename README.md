@@ -76,6 +76,10 @@ Database-writing integration/browser tests harus memakai **database test terisol
 - `deploy`: template provisioning non-destruktif dan runner production loopback-only.
 - `tests`: unit/domain/backend, HTTP terisolasi, dan browser.
 
+## Aset tampilan
+
+Foto produk contoh di `public/images/` bersumber dari Unsplash: [headphone](https://images.unsplash.com/photo-1546435770-a3e426bf472b) dan [kamera](https://images.unsplash.com/photo-1516035069371-29a1b244cc32). Sumber gambar asli: `images.unsplash.com/photo-1546435770-a3e426bf472b` dan `images.unsplash.com/photo-1516035069371-29a1b244cc32`. Penggunaan mengikuti [Unsplash License](https://unsplash.com/license). Foto hanya ilustrasi; detail garansi pada beranda adalah contoh fiktif, bukan data pengguna atau klaim kerja sama merek.
+
 ## Production
 
 Sebelum deployment, siapkan backup, tinjau migrasi, jalankan build dan verifikasi integrasi; gunakan least-privilege service account, reverse proxy HTTPS, dan konfigurasi firewall yang disetujui. Jangan expose port Node 3000 atau PostgreSQL 5432 ke internet. Persetujuan diperlukan sebelum perubahan konfigurasi penting atau publikasi.

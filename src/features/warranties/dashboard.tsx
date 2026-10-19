@@ -24,7 +24,7 @@ export function BuyerDashboard() {
       <PageHeading
         eyebrow="RINGKASAN PRIBADI"
         title={`Halo, ${state.profile.name.split(" ")[0]}.`}
-        description="Barang favorit Anda, terawat dalam satu tempat."
+        description="Lihat garansi yang masih berlaku dan yang perlu diperiksa."
       >
         <ActionLink href="/app/warranties/new">
           <Plus size={18} />
@@ -33,7 +33,7 @@ export function BuyerDashboard() {
       </PageHeading>
       <div className="summary-strip">
         {[
-          ["Total garansi", state.stats.total, "Semua tersimpan rapi", ""],
+          ["Total garansi", state.stats.total, "Produk yang sudah kamu catat", ""],
           [
             "Garansi aktif",
             state.stats.active,
@@ -43,7 +43,7 @@ export function BuyerDashboard() {
           [
             "Segera berakhir",
             state.stats.expiring,
-            "Perlu sedikit perhatian",
+            "Berakhir dalam 30 hari",
             "expiring",
           ],
         ].map(([label, note, desc, status]) => (
@@ -74,8 +74,8 @@ export function BuyerDashboard() {
                   <Clock3 size={19} />
                 </span>
                 <div>
-                  <h2>Jangan sampai terlewat</h2>
-                  <p>Garansi yang segera berakhir</p>
+                  <h2>Berakhir dalam 30 hari</h2>
+                  <p>Periksa tanggalnya sebelum mengajukan klaim.</p>
                 </div>
               </div>
               <Link
@@ -103,7 +103,7 @@ export function BuyerDashboard() {
               ))
             ) : (
               <Empty
-                title="Semua masih punya waktu"
+                title="Belum ada yang segera berakhir"
                 description="Tidak ada garansi yang berakhir dalam 30 hari ke depan."
               />
             )}
@@ -112,7 +112,7 @@ export function BuyerDashboard() {
             <div className="section-heading">
               <div>
                 <h2>Baru ditambahkan</h2>
-                <p>Arsip terbaru, langsung dalam jangkauan.</p>
+                <p>Garansi terakhir yang kamu simpan.</p>
               </div>
               <Link href="/app/warranties" className="text-link">
                 Lihat semua <ArrowRight size={16} />
@@ -175,18 +175,16 @@ export function BuyerDashboard() {
               <span className="scan-icon">
                 <ScanLine size={24} strokeWidth={1.5} />
               </span>
-              <span className="tiny-label">LEBIH SEDIKIT MENGETIK</span>
+              <span className="tiny-label">SIMULASI SCAN</span>
             </div>
             <h2>
-              Arsip lebih rapi.
-              <br />
-              Mulai dari sini.
+              Coba alur scan
             </h2>
             <p>
               Coba alur scan untuk menambahkan detail produk dengan data contoh.
             </p>
             <ActionLink href="/app/scan" secondary>
-              Jelajahi scan demo <ArrowRight size={17} />
+              Buka simulasi scan <ArrowRight size={17} />
             </ActionLink>
             <small>Simulasi · Kamera & OCR belum tersedia</small>
           </div>
@@ -194,7 +192,7 @@ export function BuyerDashboard() {
             <span className="tiny-label">CATATAN KECIL</span>
             <h3>Nota tetap di perangkat Anda.</h3>
             <p>
-              Upload hanya untuk preview lokal. Gambar tidak diunggah dan hilang
+              Pilih gambar untuk preview lokal. Gambar tidak diunggah dan hilang
               setelah halaman dimuat ulang.
             </p>
             <FileImage className="note-symbol" size={24} aria-hidden="true" />
@@ -202,7 +200,7 @@ export function BuyerDashboard() {
           <div className="workspace-footer">
             WARRANTYIDEA / RUANG PRIBADI
             <br />
-            <span>Lebih rapi, lebih tenang.</span>
+            <span>Tanggal beli. Nomor seri. Masa garansi.</span>
           </div>
         </aside>
       </div>
