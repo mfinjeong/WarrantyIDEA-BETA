@@ -7,7 +7,7 @@ Arsip garansi pribadi berbasis **Next.js App Router + TypeScript**, PostgreSQL 1
 - Login/registrasi memakai akun dan sesi server, bukan pemilih mode demo. Data bisnis dibaca/diubah lewat Route Handlers dan database, bukan localStorage.
 - Pengguna hanya dapat membaca/mengubah garansinya sendiri. Area katalog/tinjauan admin memerlukan role admin yang ditetapkan server/administrator, bukan input registrasi.
 - Password di-hash dengan Argon2id; session cookie HttpOnly, SameSite dan Secure untuk deployment HTTPS. Input divalidasi server-side; mutasi dibatasi Origin yang sah.
-- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Hasil aktual/batas verifikasi dicatat di `BACKEND_VERIFICATION.md`.
+- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Verifikasi lokal: lint/typecheck lolos; 23 tes lolos dan 8 tes database dilewati tanpa konfigurasi database test terisolasi.
 - Tidak ada commit/push, perubahan identitas Git, publikasi port, atau perubahan firewall otomatis.
 
 ## Persiapan
@@ -22,7 +22,7 @@ Copy-Item .env.example .env.local
 
 Edit `.env.local` **di VPS, bukan di chat**, dengan DATABASE_URL role runtime, BETTER_AUTH_SECRET acak, BETTER_AUTH_URL yang sesuai, dan APP_TIMEZONE. Jangan commit file `.env*` selain `.env.example`. Untuk development lokal saja gunakan origin tepat `http://127.0.0.1:3000`; production wajib HTTPS.
 
-Schema dan role khusus berada di namespace `warrantyidea`. Instruksi provisioning, pemisahan role migrasi/runtime, backup, migrasi aman, build dan proses persisten Windows ada di **`DEPLOYMENT.md`**. Jangan menjalankan `migrate reset`, `db push --accept-data-loss`, atau seed demo pada database existing.
+Schema dan role khusus berada di namespace `warrantyidea`. Provisioning harus memisahkan role migrasi/runtime dan menyertakan backup serta peninjauan migrasi sebelum deployment. Jangan menjalankan `migrate reset`, `db push --accept-data-loss`, atau seed demo pada database existing.
 
 Setelah database/schema diprovision dan migrasi ditinjau/diterapkan dengan role migrasi:
 
@@ -41,7 +41,7 @@ Aplikasi development/start hanya listen pada loopback `127.0.0.1`. Rute `/regist
 - Pencarian, filter kategori/status, sorting dan pagination API; status kalender aktif, segera berakhir (0–30 hari), kedaluwarsa, terpisah dari keputusan review.
 - Profil/preferensi pengingat, notifikasi, aktivitas tinjauan, dan statistik berasal dari database.
 
-Kontrak endpoint dan environment: `API.md`. Rencana berbasis inspeksi kode awal: `IMPLEMENTATION_PLAN.md`.
+API aplikasi menggunakan envelope `{data: ...}` atau `{error: {code, message}}`; endpoint Better Auth menggunakan format native library. Konfigurasi environment tersedia di `.env.example`.
 
 ## Pemeriksaan
 
@@ -53,7 +53,7 @@ node --env-file=.env.local node_modules/next/dist/bin/next build
 node node_modules/playwright/cli.js install chromium
 ```
 
-Database-writing integration/browser tests harus memakai **database test terisolasi**, bukan `webapp_db` production. Suite HTTP `tests/http-integration.mjs` memerlukan opt-in `ALLOW_ISOLATED_HTTP_TESTS=1`, loopback API, dan URL database test yang lolos guard. Jangan menjalankannya pada production. Instruksi dan hasil pemeriksaan aktual ada di `BACKEND_VERIFICATION.md`.
+Database-writing integration/browser tests harus memakai **database test terisolasi**, bukan `webapp_db` production. Suite HTTP `tests/http-integration.mjs` memerlukan opt-in `ALLOW_ISOLATED_HTTP_TESTS=1`, loopback API, dan URL database test yang lolos guard. Jangan menjalankannya pada production. Jalankan hanya setelah database test terisolasi tersedia dan aksesnya diverifikasi.
 
 ## Batas fitur yang tetap eksplisit
 
@@ -76,4 +76,4 @@ Database-writing integration/browser tests harus memakai **database test terisol
 
 ## Production
 
-Ikuti **`DEPLOYMENT.md`** untuk perintah exact backup/migrate/build/start, Windows Task Scheduler, least-privilege service account, reverse proxy, DNS/HTTPS dan firewall. Jangan expose port Node 3000 atau PostgreSQL 5432 ke internet. Persetujuan diperlukan sebelum perubahan konfigurasi penting atau publikasi.
+Sebelum deployment, siapkan backup, tinjau migrasi, jalankan build dan verifikasi integrasi; gunakan least-privilege service account, reverse proxy HTTPS, dan konfigurasi firewall yang disetujui. Jangan expose port Node 3000 atau PostgreSQL 5432 ke internet. Persetujuan diperlukan sebelum perubahan konfigurasi penting atau publikasi.

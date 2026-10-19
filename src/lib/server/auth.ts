@@ -3,7 +3,7 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { hash, verify } from "@node-rs/argon2";
 import { db } from "./db";
 import { authOrigin, authSecret } from "./config";
-const globalAuth = globalThis as unknown as { warrantyAuth?: ReturnType<typeof betterAuth> };
+const globalAuth = globalThis as unknown as { warrantyAuth?: ReturnType<typeof createAuth> };
 function createAuth() {
   const origin = authOrigin();
   return betterAuth({
@@ -62,4 +62,12 @@ function createAuth() {
     ipAddress: { ipAddressHeaders: ["x-warrantyidea-client-ip"] },
   },
   logger: { disabled: true },
+  });
+}
+
+export const auth = new Proxy({} as ReturnType<typeof createAuth>, {
+  get(_target, property, receiver) {
+    const instance = (globalAuth.warrantyAuth ??= createAuth());
+    return Reflect.get(instance, property, receiver);
+  },
 });
