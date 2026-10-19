@@ -3,12 +3,15 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { hash, verify } from "@node-rs/argon2";
 import { db } from "./db";
 import { authOrigin, authSecret } from "./config";
-export const auth = betterAuth({
-  appName: "WarrantyIDEA",
-  baseURL: authOrigin(),
-  secret: authSecret(),
-  trustedOrigins: [authOrigin()],
-  database: prismaAdapter(db, { provider: "postgresql" }),
+const globalAuth = globalThis as unknown as { warrantyAuth?: ReturnType<typeof betterAuth> };
+function createAuth() {
+  const origin = authOrigin();
+  return betterAuth({
+    appName: "WarrantyIDEA",
+    baseURL: origin,
+    secret: authSecret(),
+    trustedOrigins: [origin],
+    database: prismaAdapter(db(), { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 12,

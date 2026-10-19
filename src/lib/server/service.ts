@@ -51,7 +51,7 @@ function dates() {
   return { now, end };
 }
 export async function getWarranty(user: UserIdentity, id: string) {
-  const row = await db.warranty.findFirst({
+  const row = await db().warranty.findFirst({
     where: { id, ownerId: user.id },
     include,
   });
@@ -101,9 +101,9 @@ export async function listWarranties(user: UserIdentity, query: unknown) {
       : q.sort === "name"
         ? [{ purchase: { product: { name: "asc" } } }, { id: "asc" }]
         : [{ createdAt: "desc" }, { id: "desc" }];
-  const [total, rows] = await db.$transaction([
-    db.warranty.count({ where }),
-    db.warranty.findMany({
+  const [total, rows] = await db().$transaction([
+    db().warranty.count({ where }),
+    db().warranty.findMany({
       where,
       include,
       orderBy,
@@ -125,7 +125,7 @@ export async function saveWarranty(
   id?: string,
 ) {
   const v = warrantyInput.parse(raw);
-  return db.$transaction(async (tx) => {
+  return db().$transaction(async (tx) => {
     const existing = id
       ? await tx.warranty.findFirst({ where: { id, ownerId: user.id } })
       : null;
@@ -195,7 +195,7 @@ export async function saveWarranty(
   });
 }
 export async function removeWarranty(user: UserIdentity, id: string) {
-  return db.$transaction(async (tx) => {
+  return db().$transaction(async (tx) => {
     const row = await tx.warranty.findFirst({
       where: { id, ownerId: user.id },
     });
@@ -210,11 +210,11 @@ export async function upsertCatalog(user: UserIdentity, raw: unknown) {
   const { id, ...data } = v;
   const key = JSON.stringify([v.brand.toLowerCase(), v.model.toLowerCase()]);
   if (id)
-    return db.catalogProduct.update({
+    return db().catalogProduct.update({
       where: { id },
       data: { ...data, brandModelKey: key },
     });
-  return db.catalogProduct.create({ data: { ...data, brandModelKey: key } });
+  return db().catalogProduct.create({ data: { ...data, brandModelKey: key } });
 }
 export async function reviewWarranty(
   user: UserIdentity,
@@ -223,7 +223,7 @@ export async function reviewWarranty(
 ) {
   admin(user);
   const v = reviewInput.parse(raw);
-  return db.$transaction(async (tx) => {
+  return db().$transaction(async (tx) => {
     const old = await tx.warranty.findUnique({ where: { id }, include });
     if (!old) throw new HttpError(404, "NOT_FOUND", "Warranty not found.");
     const updated = await tx.warranty.updateMany({
@@ -274,34 +274,34 @@ export async function stats(user: UserIdentity, scope: "buyer" | "admin") {
   const where = scope === "admin" ? {} : { ownerId: user.id };
   const { now, end } = dates();
   const [total, active, expiring, expired, catalog, pending, approved] =
-    await db.$transaction([
-      db.warranty.count({ where }),
-      db.warranty.count({ where: { ...where, expiryDate: { gt: end } } }),
-      db.warranty.count({
+    await db().$transaction([
+      db().warranty.count({ where }),
+      db().warranty.count({ where: { ...where, expiryDate: { gt: end } } }),
+      db().warranty.count({
         where: { ...where, expiryDate: { gte: now, lte: end } },
       }),
-      db.warranty.count({ where: { ...where, expiryDate: { lt: now } } }),
-      db.catalogProduct.count({
+      db().warranty.count({ where: { ...where, expiryDate: { lt: now } } }),
+      db().catalogProduct.count({
         where: scope === "admin" ? {} : { active: true },
       }),
-      db.warranty.count({ where: { ...where, reviewStatus: "pending" } }),
-      db.warranty.count({ where: { ...where, reviewStatus: "approved" } }),
+      db().warranty.count({ where: { ...where, reviewStatus: "pending" } }),
+      db().warranty.count({ where: { ...where, reviewStatus: "approved" } }),
     ]);
   return { total, active, expiring, expired, catalog, pending, approved };
 }
 async function reminders(user: UserIdentity) {
-  const settings = await db.userSettings.findUnique({
+  const settings = await db().userSettings.findUnique({
     where: { userId: user.id },
   });
   if (settings?.reminders === false) return;
   const { now, end } = dates();
-  const rows = await db.warranty.findMany({
+  const rows = await db().warranty.findMany({
     where: { ownerId: user.id, expiryDate: { gte: now, lte: end } },
     include,
   });
   for (const row of rows) {
     const dedupeKey = `reminder:${row.id}:${row.expiryDate.toISOString().slice(0, 10)}`;
-    await db.notification.upsert({
+    await db().notification.upsert({
       where: { dedupeKey },
       update: {},
       create: {
@@ -320,21 +320,21 @@ export async function workspace(user: UserIdentity, scope: "buyer" | "admin") {
   if (scope === "buyer") await reminders(user);
   const [rows, catalog, notifications, settings, activity, counts] =
     await Promise.all([
-      db.warranty.findMany({
+      db().warranty.findMany({
         where: scope === "admin" ? {} : { ownerId: user.id },
         include,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       }),
-      db.catalogProduct.findMany({
+      db().catalogProduct.findMany({
         where: scope === "admin" ? {} : { active: true },
         orderBy: [{ name: "asc" }, { id: "asc" }],
       }),
-      db.notification.findMany({
+      db().notification.findMany({
         where: { userId: user.id, audience: scope },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       }),
-      db.userSettings.findUnique({ where: { userId: user.id } }),
-      db.reviewActivity.findMany({
+      db().userSettings.findUnique({ where: { userId: user.id } }),
+      db().reviewActivity.findMany({
         where: scope === "admin" ? {} : { ownerId: user.id },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 20,
@@ -384,9 +384,9 @@ export async function workspace(user: UserIdentity, scope: "buyer" | "admin") {
 }
 export async function updateProfile(user: UserIdentity, raw: unknown) {
   const v = profileInput.parse(raw);
-  await db.$transaction([
-    db.user.update({ where: { id: user.id }, data: { name: v.name } }),
-    db.userSettings.upsert({
+  await db().$transaction([
+    db().user.update({ where: { id: user.id }, data: { name: v.name } }),
+    db().userSettings.upsert({
       where: { userId: user.id },
       update: { reminders: v.reminders },
       create: { userId: user.id, reminders: v.reminders },
@@ -399,7 +399,7 @@ export async function markNotification(
   id: string,
   read: boolean,
 ) {
-  const row = await db.notification.findFirst({
+  const row = await db().notification.findFirst({
     where: {
       id,
       userId: user.id,
@@ -407,7 +407,7 @@ export async function markNotification(
     },
   });
   if (!row) throw new HttpError(404, "NOT_FOUND", "Notification not found.");
-  await db.notification.update({
+  await db().notification.update({
     where: { id: row.id },
     data: { readAt: read ? new Date() : null },
   });
@@ -418,7 +418,7 @@ export async function markAllNotifications(
   audience: "buyer" | "admin",
 ) {
   if (audience === "admin") admin(user);
-  const result = await db.notification.updateMany({
+  const result = await db().notification.updateMany({
     where: { userId: user.id, audience, readAt: null },
     data: { readAt: new Date() },
   });

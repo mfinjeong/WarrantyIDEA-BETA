@@ -60,7 +60,7 @@ test(
         .join("; ");
       assert.match(registered.headers.get("set-cookie")!, /HttpOnly/i);
       assert.match(registered.headers.get("set-cookie")!, /SameSite=Lax/i);
-      const account = await db.account.findFirstOrThrow({
+      const account = await db().account.findFirstOrThrow({
         where: { userId: body.user.id },
       });
       assert.match(account.password!, /^\$argon2id\$/);
@@ -105,11 +105,11 @@ test(
         new Request(origin + "/api/auth/get-session", { headers: { cookie } }),
       );
       assert.equal(await revoked.json(), null);
-      assert.ok((await db.rateLimit.count()) > 0);
+      assert.ok((await db().rateLimit.count()) > 0);
     } finally {
       // Retain generated accounts and evidence; no fixture deletion.
       // Preserve rate-limit records; no bulk cleanup of the isolated test database.
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );
@@ -134,10 +134,10 @@ test(
         else assert.equal(response.status, 401, await response.text());
       }
       assert.ok(blocked >= 2);
-      assert.ok((await db.rateLimit.count()) > 0);
+      assert.ok((await db().rateLimit.count()) > 0);
     } finally {
       // Preserve rate-limit records; no bulk cleanup of the isolated test database.
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );

@@ -144,7 +144,7 @@ test(
   async () => {
     const { db } = await import("../src/lib/server/db");
     try {
-      const before = await db.rateLimit.count();
+      const before = await db().rateLimit.count();
       for (const configured of [undefined, "short"]) {
         const env: NodeJS.ProcessEnv = {
           ...process.env,
@@ -186,9 +186,9 @@ test(
           },
         });
       }
-      assert.equal(await db.rateLimit.count(), before);
+      assert.equal(await db().rateLimit.count(), before);
     } finally {
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );
@@ -200,7 +200,7 @@ test(
     const { GET } = await import("../src/app/api/auth/[...all]/route");
     const { db } = await import("../src/lib/server/db");
     try {
-      const before = await db.rateLimit.count();
+      const before = await db().rateLimit.count();
       const response = await GET(
         new Request(process.env.BETTER_AUTH_URL! + "/api/auth/get-session", {
           headers: {
@@ -218,9 +218,9 @@ test(
           message: "Authentication is temporarily unavailable.",
         },
       });
-      assert.equal(await db.rateLimit.count(), before);
+      assert.equal(await db().rateLimit.count(), before);
     } finally {
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );
@@ -264,7 +264,7 @@ test(
       const independent = await send(ips[1], "192.0.2.1");
       assert.equal(independent.status, 401, await independent.text());
       // Read back exact bucket records; retain all evidence, never delete fixtures.
-      const buckets = await db.rateLimit.findMany({
+      const buckets = await db().rateLimit.findMany({
         where: { key: { startsWith: prefix } },
       });
       assert.equal(buckets.length, 2);
@@ -273,7 +273,7 @@ test(
         [1, 5],
       );
     } finally {
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );

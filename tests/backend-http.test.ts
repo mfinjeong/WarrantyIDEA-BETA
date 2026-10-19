@@ -14,7 +14,7 @@ test("native session responses cannot be cached", { skip }, async () => {
     assert.equal(response.headers.get("cache-control"), "no-store");
     assert.equal(await response.json(), null);
   } finally {
-    await db.$disconnect();
+    await db().$disconnect();
   }
 });
 test("HTTP JSON bounds and structured errors never expose SQL or secrets", async () => {

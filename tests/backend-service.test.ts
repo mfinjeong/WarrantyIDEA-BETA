@@ -8,9 +8,9 @@ test("stale admin review revisions conflict without decision or side effects", {
   const { db } = await import("../src/lib/server/db");
   const { saveWarranty, getWarranty, reviewWarranty, workspace } = await import("../src/lib/server/service");
   try {
-    const buyer = await db.user.create({ data: { id: randomUUID(), name: "Revision buyer", email: `${randomUUID()}@example.com` } });
-    const admin = await db.user.create({ data: { id: randomUUID(), name: "Revision admin", email: `${randomUUID()}@example.com`, role: "admin" } });
-    const otherAdmin = await db.user.create({ data: { id: randomUUID(), name: "Other revision admin", email: `${randomUUID()}@example.com`, role: "admin" } });
+    const buyer = await db().user.create({ data: { id: randomUUID(), name: "Revision buyer", email: `${randomUUID()}@example.com` } });
+    const admin = await db().user.create({ data: { id: randomUUID(), name: "Revision admin", email: `${randomUUID()}@example.com`, role: "admin" } });
+    const otherAdmin = await db().user.create({ data: { id: randomUUID(), name: "Other revision admin", email: `${randomUUID()}@example.com`, role: "admin" } });
     const input = { productName: "Revision phone", brand: "Brand", model: "Model", category: "electronics" as const, serialNumber: randomUUID(), store: "Shop", purchaseDate: "2024-01-01", expiryDate: "2099-01-01", notes: "Original details" };
     const created = await saveWarranty(buyer, input);
     const observed = (await workspace(admin, "admin")).warranties.find(w => w.id === created.id)!;
@@ -18,8 +18,8 @@ test("stale admin review revisions conflict without decision or side effects", {
     const edited = await saveWarranty(buyer, { ...input, notes: "Buyer corrected details" }, created.id);
     assert.equal(edited.revision, 2);
     const effects = async () => ({
-      notifications: await db.notification.count({ where: { href: { in: [`/app/warranties/${created.id}`, `/admin/reviews/${created.id}`] } } }),
-      activities: await db.reviewActivity.count({ where: { warrantyId: created.id } }),
+      notifications: await db().notification.count({ where: { href: { in: [`/app/warranties/${created.id}`, `/admin/reviews/${created.id}`] } } }),
+      activities: await db().reviewActivity.count({ where: { warrantyId: created.id } }),
     });
     const before = await effects();
     await assert.rejects(reviewWarranty(admin, created.id, { status: "approved", expectedRevision: observed.revision }), { status: 409, code: "REVISION_CONFLICT" });
@@ -41,7 +41,7 @@ test("stale admin review revisions conflict without decision or side effects", {
     assert.deepEqual(await effects(), after);
     // Retain generated users, warranties, notifications and audit evidence.
   } finally {
-    await db.$disconnect();
+    await db().$disconnect();
   }
 });
 
@@ -58,21 +58,21 @@ test(
       workspace,
       removeWarranty,
     } = await import("../src/lib/server/service");
-    const buyer = await db.user.create({
+    const buyer = await db().user.create({
       data: {
         id: randomUUID(),
         name: "Buyer A",
         email: `${randomUUID()}@example.com`,
       },
     });
-    const other = await db.user.create({
+    const other = await db().user.create({
       data: {
         id: randomUUID(),
         name: "Buyer B",
         email: `${randomUUID()}@example.com`,
       },
     });
-    const admin = await db.user.create({
+    const admin = await db().user.create({
       data: {
         id: randomUUID(),
         name: "Admin",
@@ -121,7 +121,7 @@ test(
       assert.equal((await listWarranties(buyer, {})).total, 0);
     } finally {
       // Retain generated fixtures/audit evidence; no bulk cleanup.
-      await db.$disconnect();
+      await db().$disconnect();
     }
   },
 );
