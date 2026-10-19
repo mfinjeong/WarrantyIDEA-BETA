@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Bell,
   ArrowUpRight,
@@ -154,7 +154,7 @@ export function Shell({
             </button>
             <span className="desktop-only">Ruang kerja</span>
             <ChevronRight size={14} className="desktop-only" />
-            <strong>{title}</strong>
+            <strong key={path} className="route-title">{title}</strong>
             <span className="demo-label">
               {admin ? "Admin" : "Pembeli"}
             </span>
@@ -186,7 +186,7 @@ export function Shell({
         </header>
         <main id="main" className="app-main">
           {warning && <Alert error>{warning} <button className="btn btn-secondary" onClick={() => void refresh()}>Coba lagi</button></Alert>}
-                    {state ? <Fragment key={state.profile.id}>{children}</Fragment> : !warning ? <div aria-busy="true">{loading ? "Memuat data…" : "Menyiapkan ruang kerja…"}</div> : null}
+                    {state ? <div className="route-content" key={`${state.profile.id}:${path}`}>{children}</div> : !warning ? <div aria-busy="true">{loading ? "Memuat data…" : "Menyiapkan ruang kerja…"}</div> : null}
         </main>
       </div>
       {!admin && <div className="bottom-nav">{links}</div>}

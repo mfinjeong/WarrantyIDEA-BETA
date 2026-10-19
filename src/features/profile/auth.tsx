@@ -3,7 +3,7 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, FolderOpen, ShieldCheck } from "lucide-react";
 import { Alert, Button, Field, Logo } from "@/components/ui";
 
 import type { Errors } from "@/lib/demo/validation";
@@ -93,9 +93,6 @@ export function AuthPage({
       <section className="auth-brand">
         <Logo light={admin} />
         <div>
-          <span className="eyebrow">
-            {admin ? "ADMIN · RUANG KERJA" : "LEBIH RAPI, LEBIH TENANG"}
-          </span>
           <h2>
             {admin
               ? "Setiap detail, ditinjau dengan teliti."
@@ -107,20 +104,15 @@ export function AuthPage({
               : "Simpan detailnya, rapikan arsipnya, dan sisakan ruang untuk hal yang lebih penting."}
           </p>
         </div>
-        <span className="auth-symbol" aria-hidden="true">
-          ↗
-        </span>
+        <div className="auth-archive" aria-hidden="true">
+          <div className="auth-archive-tab"><FolderOpen size={20} /> Arsip pribadi</div>
+          <div className="auth-archive-row"><ShieldCheck size={24} /><span>Detail produk<strong>Tersusun di satu tempat</strong></span><Check size={18} /></div>
+          <div className="auth-archive-row"><FolderOpen size={24} /><span>Bukti pembelian<strong>Preview lokal di perangkat</strong></span><Check size={18} /></div>
+        </div>
         <small>WARRANTYIDEA / ARSIP PRIBADI</small>
       </section>
       <div className="auth-form-wrap">
         <div className="auth-form">
-          <span className="eyebrow">
-            {admin
-              ? "AKSES ADMIN"
-              : register
-                ? "ARSIP ANDA DIMULAI DI SINI"
-                : "SELAMAT DATANG DI RUANG ANDA"}
-          </span>
           <h1>
             {admin
               ? "Ruang kerja admin"
@@ -137,7 +129,7 @@ export function AuthPage({
           </p>
           <Alert>Gunakan akun Anda untuk mengakses arsip pribadi.</Alert>
           {error && <Alert error>{error}</Alert>}
-          <form noValidate onSubmit={submit}>
+          <form noValidate onSubmit={submit} aria-busy={busy}>
             {register && (
               <Field
                 id="name"
@@ -257,7 +249,7 @@ export function AuthPage({
             </div>
           )}
           <div className="auth-direct">
-            <Link href="/">← Kembali ke beranda</Link>
+            <Link href="/"><ArrowLeft size={15} aria-hidden="true" /> Kembali ke beranda</Link>
           </div>
         </div>
       </div>

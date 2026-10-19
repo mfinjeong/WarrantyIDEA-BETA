@@ -22,10 +22,6 @@ export default function Landing() {
       <main id="main">
         <section className="landing-hero marketing-container">
           <div className="hero-copy">
-            <span className="eyebrow">
-              <span className="eyebrow-dot" />
-              Satu tempat untuk semua garansi
-            </span>
             <h1>
               Garansi tersimpan.
               <br />
@@ -66,6 +62,10 @@ export default function Landing() {
             </span>
             <div className="archive-back archive-back-one" />
             <div className="archive-back archive-back-two" />
+            <div className="filing-receipt" aria-hidden="true">
+              <FileImage size={20} />
+              <i /><i /><i /><i />
+            </div>
             <div className="archive-card">
               <div className="archive-top">
                 <span>
@@ -147,7 +147,6 @@ export default function Landing() {
         <section id="fitur" className="marketing-container landing-section">
           <div className="section-intro">
             <div>
-              <span className="eyebrow">DETAIL KECIL, BEDANYA BESAR</span>
               <h2>
                 Setiap barang punya cerita.
                 <br />
@@ -161,7 +160,7 @@ export default function Landing() {
           </div>
           <div className="feature-grid">
             <article className="feature-panel">
-              <span className="feature-number">01 / SIMPAN</span>
+
               <Package size={32} />
               <h3>
                 Arsip yang tahu
@@ -184,7 +183,7 @@ export default function Landing() {
               </div>
             </article>
             <article className="feature-panel">
-              <span className="feature-number">02 / RAPIKAN</span>
+
               <FileImage size={32} />
               <h3>
                 Bukti pembelian,
@@ -198,7 +197,7 @@ export default function Landing() {
               <span className="feature-tag">PREVIEW LOKAL</span>
             </article>
             <article className="feature-panel">
-              <span className="feature-number">03 / PANTAU</span>
+
               <BellRing size={32} />
               <h3>
                 Lebih dekat dengan
@@ -212,7 +211,7 @@ export default function Landing() {
               <span className="feature-tag">PENGINGAT DALAM APLIKASI</span>
             </article>
             <article className="feature-panel">
-              <span className="feature-number">04 / JELAJAHI</span>
+
               <ScanLine size={32} />
               <h3>
                 Bayangkan scan.
@@ -231,7 +230,6 @@ export default function Landing() {
         </section>
         <section id="cara-kerja" className="how-section">
           <div className="marketing-container">
-            <span className="eyebrow">DARI BELI KE TERARSIP</span>
             <h2>
               Tiga langkah.
               <br />
@@ -266,7 +264,6 @@ export default function Landing() {
         </section>
         <section className="marketing-container final-cta">
           <div>
-            <span className="eyebrow">RAPI MULAI HARI INI</span>
             <h2>
               Beri garansi Anda
               <br />

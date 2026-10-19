@@ -40,7 +40,7 @@ export function Button({
       className={`btn btn-${variant} ${className}`}
       aria-busy={busy || undefined}
     >
-      {busy ? <LoaderCircle className="spin" size={18} /> : null}
+      {busy ? <LoaderCircle className="spin" size={18} aria-hidden="true" /> : null}
       {children}
     </button>
   );
@@ -129,7 +129,7 @@ export function Alert({
       className={`alert ${error ? "alert-error" : ""}`}
       role={error ? "alert" : "status"}
     >
-      <AlertCircle size={18} />
+      <AlertCircle size={18} aria-hidden="true" />
       <div>{children}</div>
     </div>
   );
