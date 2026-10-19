@@ -24,7 +24,7 @@ export const registrationInput = z.strictObject({
     .email()
     .max(254)
     .transform((v) => v.toLowerCase()),
-  password: z.string().min(12).max(128),
+  password: z.string().min(8).max(128),
   callbackURL: z.string().max(2048).optional(),
   rememberMe: z.boolean().optional(),
 });

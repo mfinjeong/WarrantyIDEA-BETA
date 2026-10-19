@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { isIP } from "node:net";
 import { HttpError } from "./http";
 
-type ProxyEnvironment = { NODE_ENV?: string; TRUSTED_PROXY_SECRET?: string };
+type ProxyEnvironment = { NODE_ENV?: string; TRUSTED_PROXY_SECRET?: string; VERCEL?: string };
 
 /** Public auth routes must sanitize untrusted headers before Better Auth. */
 export function prepareAuthRequest(
@@ -25,7 +25,14 @@ export function prepareAuthRequest(
     !secret &&
     !proof &&
     ["localhost", "127.0.0.1", "[::1]"].includes(new URL(request.url).hostname);
-  if (loopbackDev) {
+  // Vercel overwrites this header at its edge. Never enable via request headers.
+  // https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for
+  if (env.VERCEL === "1") {
+    ip = request.headers.get("x-vercel-forwarded-for") ?? "";
+    const version = isIP(ip);
+    if (!version || ip.includes("%")) throw unavailable();
+    if (version === 6) ip = new URL(`http://[${ip}]/`).hostname.slice(1, -1);
+  } else if (loopbackDev) {
     ip = "127.0.0.1";
   } else {
     // Compare fixed-length digests even when the proof has a different length.
@@ -50,6 +57,7 @@ export function prepareAuthRequest(
     "x-warrantyidea-proxy-secret",
     "x-real-ip",
     "x-forwarded-for",
+    "x-vercel-forwarded-for",
     "client-ip",
     "forwarded",
   ])

@@ -42,6 +42,22 @@ async function handler(request: Request) {
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error) {
+    // Keep diagnostics server-side and never log request bodies, cookies or DB URLs.
+    const diagnostics: string[] = [];
+    const visit = (value: unknown, depth = 0) => {
+      if (!value || typeof value !== "object" || depth > 6) return;
+      for (const [key, item] of Object.entries(value)) {
+        if (key === "code" && typeof item === "string") diagnostics.push(item);
+        else if (typeof item === "string") {
+          for (const marker of ["self-signed certificate", "unable to verify", "certificate has expired", "hostname mismatch"])
+            if (item.toLowerCase().includes(marker)) diagnostics.push(marker);
+        } else if (typeof item === "object") visit(item, depth + 1);
+      }
+    };
+    visit(error);
+    console.error("Authentication request failed", {
+      name: error instanceof Error ? error.name : "UnknownError", diagnostics,
+    });
     return errorResponse(error);
   }
 }

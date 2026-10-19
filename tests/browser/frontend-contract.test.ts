@@ -2,11 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const source = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
-test("auth uses real accounts with 12-character registration and no bypass", () => {
+test("auth uses real accounts with 8-character registration and no bypass", () => {
   const auth = source("src/features/profile/auth.tsx");
   assert.match(auth, /authClient\.signUp\.email/);
   assert.match(auth, /authClient\.signIn\.email/);
-  assert.match(auth, /password.length < 12/);
+  assert.match(auth, /password.length < 8/);
   assert.doesNotMatch(auth, /Buat profil demo|Masuk demo|Jelajahi tanpa mengisi form/);
 });
 test("warranty collection uses server pagination instead of snapshot filtering", () => {

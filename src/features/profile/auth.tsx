@@ -43,9 +43,9 @@ export function AuthPage({
       next.name = "Nama tampilan harus 2–60 karakter.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))
       next.email = "Masukkan alamat email yang valid.";
-    if (register ? values.password.length < 12 : !values.password.trim())
+    if (register ? values.password.length < 8 : !values.password.trim())
       next.password = register
-        ? "Password minimal 12 karakter."
+        ? "Password minimal 8 karakter."
         : "Isi password akun Anda.";
     if (register && values.password !== values.confirm)
       next.confirm = "Konfirmasi password belum cocok.";
@@ -172,10 +172,10 @@ export function AuthPage({
                   {...input("password")}
                   type={show ? "text" : "password"}
                   autoComplete={register ? "new-password" : "current-password"}
-                  minLength={register ? 12 : undefined}
+                  minLength={register ? 8 : undefined}
                   maxLength={128}
                   placeholder={
-                    register ? "Minimal 12 karakter" : "Password akun Anda"
+                    register ? "Minimal 8 karakter" : "Password akun Anda"
                   }
                 />
                 <button

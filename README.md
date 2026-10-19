@@ -7,7 +7,7 @@ Arsip garansi pribadi berbasis **Next.js App Router + TypeScript**, PostgreSQL 1
 - Login/registrasi memakai akun dan sesi server, bukan pemilih mode demo. Data bisnis dibaca/diubah lewat Route Handlers dan database, bukan localStorage.
 - Pengguna hanya dapat membaca/mengubah garansinya sendiri. Area katalog/tinjauan admin memerlukan role admin yang ditetapkan server/administrator, bukan input registrasi.
 - Password di-hash dengan Argon2id; session cookie HttpOnly, SameSite dan Secure untuk deployment HTTPS. Input divalidasi server-side; mutasi dibatasi Origin yang sah.
-- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Verifikasi lokal: lint/typecheck lolos; 23 tes lolos dan 8 tes database dilewati tanpa konfigurasi database test terisolasi.
+- **Database existing `webapp_db` tidak otomatis dimigrasikan.** Inspeksi schema, backup, kredensial, dan persetujuan operasional dibutuhkan sebelum rollout. Verifikasi lokal: lint/typecheck lolos; 25 tes lolos dan 8 tes database dilewati tanpa konfigurasi database test terisolasi.
 - Tidak ada commit/push, perubahan identitas Git, publikasi port, atau perubahan firewall otomatis.
 
 ## Persiapan
@@ -40,6 +40,8 @@ Aplikasi development/start hanya listen pada loopback `127.0.0.1`. Rute `/regist
 - Admin terotorisasi: `/admin`, `/admin/catalog`, `/admin/reviews`, `/admin/reviews/[id]`, `/admin/notifications`, `/admin/profile`.
 - Pencarian, filter kategori/status, sorting dan pagination API; status kalender aktif, segera berakhir (0–30 hari), kedaluwarsa, terpisah dari keputusan review.
 - Profil/preferensi pengingat, notifikasi, aktivitas tinjauan, dan statistik berasal dari database.
+
+Registrasi memakai password 8–128 karakter. Pada Vercel, `BETTER_AUTH_URL` harus tepat sama dengan origin publik; identitas IP memakai header yang ditimpa platform. Untuk Supabase, isi `DATABASE_CA_CERT` dengan PEM CA resmi agar TLS tetap diverifikasi.
 
 API aplikasi menggunakan envelope `{data: ...}` atau `{error: {code, message}}`; endpoint Better Auth menggunakan format native library. Konfigurasi environment tersedia di `.env.example`.
 

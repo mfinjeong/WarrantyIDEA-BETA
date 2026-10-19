@@ -137,6 +137,23 @@ test("nonproduction loopback development ignores spoofed headers; nonloopback fa
   );
 });
 
+test("Vercel runtime trusts only its platform-overwritten IP header", () => {
+  const env = { NODE_ENV: "production", VERCEL: "1" };
+  const sanitized = prepareAuthRequest(request({
+    "x-vercel-forwarded-for": "192.0.2.17",
+    "x-forwarded-for": "203.0.113.1",
+    "x-real-ip": "203.0.113.2",
+    "x-warrantyidea-client-ip": "203.0.113.3",
+    "x-warrantyidea-proxy-secret": "forged",
+  }), env);
+  assert.equal(sanitized.headers.get("x-warrantyidea-client-ip"), "192.0.2.17");
+  assert.equal(sanitized.headers.get("x-vercel-forwarded-for"), null);
+  assert.equal(sanitized.headers.get("x-warrantyidea-proxy-secret"), null);
+  for (const ip of ["", "garbage", "192.0.2.1, 192.0.2.2", "fe80::1%eth0"])
+    assert.throws(() => prepareAuthRequest(request({ "x-vercel-forwarded-for": ip }), env));
+  assert.throws(() => prepareAuthRequest(request({ "x-vercel-forwarded-for": "192.0.2.17" }), { NODE_ENV: "production" }));
+});
+
 const databaseSkip = isolatedDatabaseTestSkip();
 test(
   "production route fails closed with absent or weak proxy configuration in isolated child processes",

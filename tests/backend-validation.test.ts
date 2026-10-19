@@ -14,6 +14,10 @@ test("strict registration rejects privilege escalation and invalid names", () =>
     password: "Very-strong-password-123",
   };
   assert.equal(registrationInput.safeParse(valid).success, true);
+  for (const length of [8, 12, 128])
+    assert.equal(registrationInput.safeParse({ ...valid, password: "a".repeat(length) }).success, true);
+  for (const length of [0, 6, 7, 129])
+    assert.equal(registrationInput.safeParse({ ...valid, password: "a".repeat(length) }).success, false);
   assert.equal(
     registrationInput.safeParse({ ...valid, role: "admin" }).success,
     false,

@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { databaseConfig } from "./database-config";
 import { PrismaClient } from "./generated/prisma/client";
 const globalDb = globalThis as unknown as { warrantyDb?: PrismaClient };
 function createDb() {
@@ -6,7 +7,7 @@ function createDb() {
   if (!url) throw new Error("DATABASE_URL is required");
   return new PrismaClient({
     adapter: new PrismaPg(
-      { connectionString: url, max: 10 },
+      databaseConfig(url, process.env.DATABASE_CA_CERT),
       { schema: "warrantyidea" },
     ),
   });
