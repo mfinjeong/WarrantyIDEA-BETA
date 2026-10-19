@@ -136,6 +136,9 @@ export function SampleArchive() {
     );
     const node = stage.current;
     if (!node) return;
+    const palette = getComputedStyle(node);
+    const surface = palette.getPropertyValue("--surface").trim();
+    const emphasis = palette.getPropertyValue("--brand-soft").trim();
     const targets = [".sample-receipt", ".sample-details", ".sample-calendar"];
     for (const selector of targets) {
       if (token !== run.current) return;
@@ -154,8 +157,8 @@ export function SampleArchive() {
             ]
           : selector === ".sample-details"
             ? [
-                { clipPath: "inset(0 0 85% 0)", background: "#edf2ff" },
-                { clipPath: "inset(0)", background: "#ffffff" },
+                { clipPath: "inset(0 0 85% 0)", background: emphasis },
+                { clipPath: "inset(0)", background: surface },
               ]
             : [
                 { transform: "rotateY(-65deg)", opacity: 0.3 },
