@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { WarrantyRange } from "./warranty-range";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Camera,
@@ -139,7 +140,7 @@ export function SampleArchive() {
     const palette = getComputedStyle(node);
     const surface = palette.getPropertyValue("--surface").trim();
     const emphasis = palette.getPropertyValue("--brand-soft").trim();
-    const targets = [".sample-receipt", ".sample-details", ".sample-calendar"];
+    const targets = [".sample-receipt", ".sample-details", ".sample-calendar", ".sample-range"];
     for (const selector of targets) {
       if (token !== run.current) return;
       const el = node.querySelector(selector);
@@ -160,6 +161,11 @@ export function SampleArchive() {
                 { clipPath: "inset(0 0 85% 0)", background: emphasis },
                 { clipPath: "inset(0)", background: surface },
               ]
+            : selector === ".sample-range"
+              ? [
+                  { clipPath: "inset(0 90% 0 0)" },
+                  { clipPath: "inset(0)" },
+                ]
             : [
                 { transform: "rotateY(-65deg)", opacity: 0.3 },
                 { transform: "rotateY(0deg)", opacity: 1 },
@@ -260,6 +266,7 @@ export function SampleArchive() {
                 <dd>{sample.ends}</dd>
               </div>
             </dl>
+            <WarrantyRange bought={sample.bought} ends={sample.ends} />
           </div>
         </div>
       </div>

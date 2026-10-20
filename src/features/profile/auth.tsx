@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, FolderOpen, ShieldCheck } from "lucide-react";
 import { Alert, Button, Field, Logo } from "@/components/ui";
+import { WarrantyRange } from "@/components/marketing/warranty-range";
 
 import type { Errors } from "@/lib/demo/validation";
 const subscribe = () => () => {};
@@ -110,6 +111,7 @@ export function AuthPage({
           <Image src="/images/headphones.jpg" alt="" width={362} height={150} className="auth-product-photo" style={{ width: "100%", height: 150, objectFit: "cover", borderRadius: 8, marginTop: 12 }} />
           <div className="auth-archive-row"><ShieldCheck size={24} /><span>Headphone · contoh arsip<strong>Tanggal beli dan nomor seri</strong></span><Check size={18} /></div>
           <div className="auth-archive-row"><FolderOpen size={24} /><span>Bukti pembelian<strong>Preview lokal di perangkat</strong></span><Check size={18} /></div>
+          <WarrantyRange bought="12 September 2026" ends="12 September 2027" />
         </div>
         <small>WARRANTYIDEA / ARSIP PRIBADI</small>
       </section>
@@ -120,14 +122,14 @@ export function AuthPage({
               ? "Ruang kerja admin"
               : register
                 ? "Buat akun WarrantyIDEA"
-                : "Masuk ke arsip kamu"}
+                : "Masuk ke arsip Anda"}
           </h1>
           <p>
             {register
-              ? "Setelah daftar, kamu bisa langsung mencatat garansi pertama."
+              ? "Setelah daftar, Anda bisa langsung mencatat garansi pertama."
               : admin
                 ? "Masuk menggunakan akun dengan peran admin."
-                : "Pakai email yang kamu daftarkan sebelumnya."}
+                : "Pakai email yang Anda daftarkan sebelumnya."}
           </p>
           {error && <Alert error>{error}</Alert>}
           <form noValidate onSubmit={submit} aria-busy={busy}>
@@ -142,7 +144,7 @@ export function AuthPage({
                   {...input("name")}
                   maxLength={60}
                   autoComplete="nickname"
-                  placeholder="Nama kamu"
+                  placeholder="Nama Anda"
                 />
               </Field>
             )}

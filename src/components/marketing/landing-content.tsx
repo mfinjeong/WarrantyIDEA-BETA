@@ -3,6 +3,7 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import { ActionLink, Logo } from "@/components/ui";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { SampleArchive, Reveal } from "./sample-archive";
+import { WarrantyFlow } from "./warranty-flow";
 
 export function LandingContent() {
   return (
@@ -86,32 +87,7 @@ export function LandingContent() {
               <br />
               yang baru Anda beli.
             </h2>
-            <div className="archive-steps">
-              <article>
-                <span>01 / CATAT</span>
-                <h3>Masukkan produknya.</h3>
-                <p>
-                  Buat akun, lalu isi nama produk, model, dan nomor seri secara
-                  manual.
-                </p>
-              </article>
-              <article>
-                <span>02 / LENGKAPI</span>
-                <h3>Cek tanggal di nota.</h3>
-                <p>
-                  Tambahkan toko, tanggal beli, dan masa garansi. Preview nota
-                  hanya bersifat lokal.
-                </p>
-              </article>
-              <article>
-                <span>03 / BUKA LAGI</span>
-                <h3>Lihat saat dibutuhkan.</h3>
-                <p>
-                  Detail dan status garansi tersimpan di arsip akun Anda. Buka
-                  lagi sebelum menghubungi toko.
-                </p>
-              </article>
-            </div>
+            <WarrantyFlow />
             <p className="archive-demo-note">
               Ingin mencoba alur scan?{" "}
               <Link href="/app/scan">
