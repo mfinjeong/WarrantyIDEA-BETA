@@ -59,6 +59,7 @@ Database-writing integration/browser tests harus memakai **database test terisol
 
 ## Batas fitur yang tetap eksplisit
 
+- Beranda memuat demo purnajual interaktif dengan data fiktif untuk pembeli, petugas garansi, dan mitra servis. Pergantian peran/tahap hanya simulasi di browser, bukan otorisasi atau pengajuan kasus nyata. Akun organisasi, unggah bukti permanen, integrasi service center, dan keputusan klaim otomatis belum tersedia; akun yang berjalan tetap untuk arsip pribadi.
 - Kamera, QR/barcode dan OCR masih simulasi berlabel, bukan ekstraksi nyata.
 - Gambar nota hanya preview lokal dalam memori; tidak diunggah atau dipersist, hilang setelah reload. Metadata pembelian/garansi dipersist di PostgreSQL.
 - Notifikasi pengingat dalam aplikasi tidak sama dengan scheduler email/push. Tidak mengklaim pengiriman email tanpa provider dan konfigurasi.

@@ -2810,6 +2810,16 @@ tbody tr:hover {
   font-size: 13px;
   margin-bottom: var(--space-6);
 }
+.auth-account-scope {
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.7;
+}
 .auth-form .field {
   margin-bottom: var(--space-5);
 }

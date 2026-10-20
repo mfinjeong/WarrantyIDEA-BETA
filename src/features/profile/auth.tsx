@@ -98,12 +98,12 @@ export function AuthPage({
           <h2>
             {admin
               ? "Periksa garansi yang masuk."
-              : "Tanggal beli sering lupa. Nomor seri juga."}
+              : "Mulai dari arsip pribadi Anda."}
           </h2>
           <p>
             {admin
               ? "Buka antrean tinjauan, periksa detail produk, lalu catat keputusan Anda."
-              : "Catat sekali di sini. Saat dibutuhkan, cari nama barangnya tanpa membongkar laci."}
+              : "Catat produk, tanggal pembelian, dan masa garansi. Simulasi kolaborasi purnajual dapat Anda jelajahi di beranda."}
           </p>
         </div>
         <div className="auth-archive" aria-hidden="true">
@@ -131,6 +131,10 @@ export function AuthPage({
                 ? "Masuk menggunakan akun dengan peran admin."
                 : "Pakai email yang Anda daftarkan sebelumnya."}
           </p>
+          {!admin && <div className="auth-account-scope">
+            Akun ini untuk arsip pribadi. Ruang kerja organisasi dan pengajuan
+            kasus ke mitra servis belum tersedia.
+          </div>}
           {error && <Alert error>{error}</Alert>}
           <form noValidate onSubmit={submit} aria-busy={busy}>
             {register && (

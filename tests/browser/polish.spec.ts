@@ -1,39 +1,26 @@
 import { expect, test } from "@playwright/test";
 
-test("ilustrasi arsip menampilkan footer tanpa tertutup label pada semua breakpoint", async ({
+test("demo purnajual tetap berada dalam viewport pada semua breakpoint", async ({
   page,
 }) => {
   for (const width of [1440, 1024, 768, 375, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/");
-    const scene = page.locator(".archive-scene:visible");
-    await expect(scene.getByText("12 bulan garansi")).toBeVisible();
+    const scene = page.locator("#contoh-arsip");
+    await expect(scene).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     const rects = await scene.evaluate((element) => {
       const scene = element.getBoundingClientRect();
-      const footer = element
-        .querySelector(".archive-footer")!
-        .getBoundingClientRect();
-      const label = element
-        .querySelector(".floating-label")!
-        .getBoundingClientRect();
       return {
-        bottom: scene.bottom,
         left: scene.left,
         right: scene.right,
-        footerBottom: footer.bottom,
-        footerLeft: footer.left,
-        footerRight: footer.right,
-        labelTop: label.top,
-        labelBottom: label.bottom,
+        height: scene.height,
+        viewport: innerWidth,
       };
     });
-    expect(rects.footerBottom, `footer/label @ ${width}`).toBeLessThanOrEqual(
-      rects.labelTop,
-    );
-    expect(rects.footerLeft).toBeGreaterThanOrEqual(rects.left);
-    expect(rects.footerRight).toBeLessThanOrEqual(rects.right);
-    expect(rects.labelBottom).toBeLessThanOrEqual(rects.bottom);
+    expect(rects.left, `left edge @ ${width}`).toBeGreaterThanOrEqual(0);
+    expect(rects.right, `right edge @ ${width}`).toBeLessThanOrEqual(rects.viewport);
+    expect(rects.height).toBeGreaterThan(200);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -42,16 +29,16 @@ test("ilustrasi arsip menampilkan footer tanpa tertutup label pada semua breakpo
   }
 });
 
-test("menu landing dengan keyboard dan pencarian dashboard tetap berfungsi", async ({
+test("menu landing dengan keyboard dan batas autentikasi tetap berfungsi", async ({
   page,
 }) => {
   for (const width of [768, 375]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/");
-    const toggle = page.getByRole("button", { name: "Buka menu", exact: true });
+    const toggle = page.locator(".marketing-menu-toggle");
     await toggle.click();
     await expect(
-      page.getByRole("link", { name: "Manfaat", exact: true }),
+      page.locator('#marketing-navigation a[href="#contoh-arsip"]'),
     ).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(toggle).toBeFocused();
@@ -59,7 +46,7 @@ test("menu landing dengan keyboard dan pencarian dashboard tetap berfungsi", asy
     await toggle.click();
     await page
       .getByRole("navigation", { name: "Navigasi beranda" })
-      .getByRole("link", { name: "Fitur", exact: true })
+      .getByRole("link", { name: /^Peran pengguna/ })
       .click();
     await expect(page).toHaveURL(/#fitur$/);
     await expect(toggle).toHaveAttribute("aria-expanded", "false");

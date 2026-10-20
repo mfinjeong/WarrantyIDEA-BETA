@@ -11,12 +11,14 @@ test("current-section tracking retains targets omitted from observer delta callb
     const NativeObserver = window.IntersectionObserver;
     window.IntersectionObserver = class extends NativeObserver {
       private callback: IntersectionObserverCallback;
+      private navigationObserver: boolean;
       constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
         super(callback, options);
         this.callback = callback;
+        this.navigationObserver = options?.rootMargin === "-12% 0px -45% 0px";
       }
       observe(target: Element) {
-        if (["contoh-arsip", "fitur", "cara-kerja"].includes(target.id)) {
+        if (this.navigationObserver && ["contoh-arsip", "fitur", "cara-kerja"].includes(target.id)) {
           window.__navigationIntersection = (changes) => {
             const entries = changes.map(({ id, visible, top }) => {
               const element = document.getElementById(id)!;

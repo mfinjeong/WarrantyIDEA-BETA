@@ -14,9 +14,9 @@ const subscribeMobile = (onChange: () => void) => {
 };
 const mobileSnapshot = () => window.matchMedia(mobileQuery).matches;
 const sections = [
-  { href: "#contoh-arsip", label: "Contoh arsip", detail: "Buka catatan produk dan masa garansinya", Icon: FolderOpen },
-  { href: "#fitur", label: "Yang dicatat", detail: "Nomor seri, tanggal beli, dan detail toko", Icon: ListChecks },
-  { href: "#cara-kerja", label: "Cara pakai", detail: "Siapkan data sebelum mencatat garansi", Icon: Route },
+  { href: "#contoh-arsip", label: "Demo kasus", detail: "Jelajahi simulasi dari laporan sampai pengembalian", Icon: FolderOpen },
+  { href: "#fitur", label: "Peran pengguna", detail: "Pembeli, petugas garansi, dan mitra servis", Icon: ListChecks },
+  { href: "#cara-kerja", label: "Rencana uji coba", detail: "Alur pilot bersama organisasi dan mitranya", Icon: Route },
 ] as const;
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
@@ -105,7 +105,7 @@ export function MarketingHeader() {
             </Link>
             <figure className="nav-preview">
               <span className="nav-preview-art" aria-hidden="true" />
-              <figcaption>Catatan garansi tersimpan di akunmu. Nota asli tetap kamu simpan sendiri.</figcaption>
+              <figcaption>Demo memakai data fiktif. Akun yang tersedia saat ini masih untuk arsip pribadi, bukan ruang kerja organisasi.</figcaption>
             </figure>
           </div>
         </nav>
@@ -113,8 +113,8 @@ export function MarketingHeader() {
           <Link href="/login" className="desktop-only">
             Masuk
           </Link>
-          <ActionLink href="/register">
-            Catat garansi <ArrowUpRight size={16} aria-hidden="true" />
+          <ActionLink href="#contoh-arsip">
+            Jelajah demo <ArrowUpRight size={16} aria-hidden="true" />
           </ActionLink>
           <button
             ref={toggle}

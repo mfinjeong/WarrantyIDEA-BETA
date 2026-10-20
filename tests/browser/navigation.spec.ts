@@ -22,10 +22,10 @@ for (const width of [320, 390, 768]) {
     await expect(menu).toBeFocused();
     await expect(nav).toHaveAttribute("inert", "");
     await menu.click();
-    await nav.getByRole("link", { name: /^Yang dicatat/ }).click();
+    await nav.getByRole("link", { name: /^Peran pengguna/ }).click();
     await expect(page).toHaveURL(/#fitur$/);
     await expect(menu).toHaveAttribute("aria-expanded", "false");
-    await expect(nav.getByRole("link", { name: /^Yang dicatat/, includeHidden: true })).toHaveAttribute("aria-current", "location");
+    await expect(nav.getByRole("link", { name: /^Peran pengguna/, includeHidden: true })).toHaveAttribute("aria-current", "location");
   });
 }
 
@@ -34,15 +34,15 @@ test("desktop navigation survives resize and follows the active section", async 
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Navigasi beranda" });
   await expect(nav).not.toHaveAttribute("inert", "");
-  await nav.getByRole("link", { name: /^Cara pakai/ }).click();
+  await nav.getByRole("link", { name: /^Rencana uji coba/ }).click();
   await expect(page).toHaveURL(/#cara-kerja$/);
-  await expect(nav.getByRole("link", { name: /^Cara pakai/ })).toHaveAttribute("aria-current", "location");
+  await expect(nav.getByRole("link", { name: /^Rencana uji coba/ })).toHaveAttribute("aria-current", "location");
   await page.setViewportSize({ width: 390, height: 1000 });
   await expect(nav).toHaveAttribute("inert", "");
   await page.getByRole("button", { name: "Buka menu", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(nav).not.toHaveAttribute("inert", "");
-  await expect(nav.getByRole("link", { name: /^Contoh arsip/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /^Demo kasus/ })).toBeVisible();
 });
 
 test("reduced-motion navigation retains static state and visible focus", async ({ page }) => {
