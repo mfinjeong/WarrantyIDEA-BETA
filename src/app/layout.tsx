@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/plus-jakarta-sans";
-import "./globals.css";
-import { DemoProvider } from "@/lib/demo/provider";
-import { Toasts } from "@/components/ui";
+import "./site.css";
 
 export const metadata: Metadata = {
-  title: {
-    default: "WarrantyIDEA — Garansi tersimpan, pikiran tenang",
-    template: "%s · WarrantyIDEA",
-  },
+  title: "WarrantyIDEA | Garansi jelas, penanganan terlacak",
   description:
-    "Arsip garansi produk pribadi dalam satu tempat dengan akun yang aman.",
+    "Konsep alur purnajual yang menghubungkan pembeli, pemberi garansi, dan mitra servis. Website presentasi tanpa akun atau penyimpanan data.",
 };
 export default function RootLayout({
   children,
@@ -23,10 +18,7 @@ export default function RootLayout({
         <a href="#main" className="skip-link">
           Lewati ke konten utama
         </a>
-        <DemoProvider>
-          {children}
-          <Toasts />
-        </DemoProvider>
+        {children}
       </body>
     </html>
   );

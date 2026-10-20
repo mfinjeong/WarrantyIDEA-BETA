@@ -1,5 +1,5 @@
 node_modules/
-src/lib/server/generated/
+
 .next/
 out/
 coverage/
@@ -8,7 +8,7 @@ playwright-report/
 artifacts/
 *.tsbuildinfo
 .env*
-!.env.example
+
 
 #DOCUMENTATION
 AGENTS.md

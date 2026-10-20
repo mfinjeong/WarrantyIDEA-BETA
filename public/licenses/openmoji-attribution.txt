@@ -1,9 +1,0 @@
-Card file box (1F5C3)
-Creator: Sina Schulz / OpenMoji
-Original design date in OpenMoji metadata: 2018-04-18
-Source: https://github.com/hfg-gmuend/openmoji/blob/4d1486fac1a46be7e3becdb809b0210e586f2555/color/svg/1F5C3.svg
-Metadata: https://github.com/hfg-gmuend/openmoji/blob/master/data/openmoji.json
-License: Creative Commons Attribution-ShareAlike 4.0 International
-https://creativecommons.org/licenses/by-sa/4.0/
-Changes: none. Original SVG retained; displayed at a smaller size using CSS.
-This license applies to the illustration, not to unrelated application source code.

@@ -1,0 +1,21 @@
+Photography used in the static WarrantyIDEA presentation
+
+Photographer: IT services EU
+Profile: https://www.pexels.com/@it-services-eu-9278798/
+License: Pexels License, https://www.pexels.com/license/
+
+Main photo:
+Title: A Man Fixing a Laptop
+Source page: https://www.pexels.com/photo/a-man-fixing-a-laptop-7639370/
+Original download: https://images.pexels.com/photos/7639370/pexels-photo-7639370.jpeg
+Published date shown by source: April 25, 2021
+Local derivatives: images/repair-workbench.webp (1120x1000), images/repair-workbench-small.webp (640x570)
+
+Detail photo:
+Title: Hand with Screwdriver Fixing Motherboard
+Source page: https://www.pexels.com/photo/hand-with-screwdriver-fixing-motherboard-7639373/
+Original download: https://images.pexels.com/photos/7639373/pexels-photo-7639373.jpeg
+Local derivative: images/repair-detail.webp (800x640)
+
+Edits: resize, crop, WebP encoding at quality 78. No image generation, compositing, or synthetic people added.
+These are stock photographs illustrating repair work, not photographs of WarrantyIDEA staff, customers, or partners. No endorsement by the photographer, people, or brands pictured is implied. Source pages and license were checked during implementation.
