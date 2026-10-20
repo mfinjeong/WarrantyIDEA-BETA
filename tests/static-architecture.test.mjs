@@ -69,6 +69,7 @@ test("build and QA use a static export without application server commands", () 
   assert.match(browserConfig, /process\.env\.UI_QA_URL/);
   assert.match(browserConfig, /command:\s*["']npm run preview["']/);
   assert.doesNotMatch(browserConfig, /npm run dev/);
+  assert.equal(JSON.parse(read("vercel.json")).framework, null);
   assert.equal(JSON.parse(read("vercel.json")).outputDirectory, "out");
   const lock = JSON.parse(read("package-lock.json"));
   assert.ok(
