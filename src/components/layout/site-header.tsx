@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowUpRight, Menu, ShieldCheck } from "lucide-react";
+import { Arrow, Brand } from "./brand";
 
 const links = [
   ["#manfaat", "Kenapa WarrantyIDEA"],
@@ -43,11 +43,7 @@ export function SiteHeader() {
     <header className="site-header" ref={header}>
       <div className="container header-inner">
         <a className="wordmark" href="/" aria-label="WarrantyIDEA, beranda">
-          <ShieldCheck size={27} strokeWidth={1.8} aria-hidden="true" />
-          <span>
-            Warranty<span className="wordmark-suffix">IDEA</span>
-            <span className="wordmark-dot">.</span>
-          </span>
+          <Brand />
         </a>
         <nav className="desktop-nav" aria-label="Navigasi utama">
           {links.map(([href, label]) => (
@@ -57,7 +53,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <a className="header-cta" href="#pengguna">
-          Untuk siapa? <ArrowUpRight size={16} aria-hidden="true" />
+          Untuk siapa? <Arrow />
         </a>
         <details
           className="mobile-menu"
@@ -71,7 +67,6 @@ export function SiteHeader() {
           }}
         >
           <summary aria-label="Menu navigasi">
-            <Menu size={22} aria-hidden="true" />
             <span>Menu</span>
           </summary>
           <nav aria-label="Navigasi mobile">

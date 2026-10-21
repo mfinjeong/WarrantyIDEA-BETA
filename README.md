@@ -6,10 +6,11 @@ Tidak ada akun, autentikasi, dashboard privat, API aplikasi, unggah dokumen, ata
 
 ## Tampilan dan batas proyek
 
-- Landing page berpalet hijau dengan fotografi servis nyata yang dioptimalkan ke WebP.
+- Landing editorial forest/mint dengan nota berperforasi, anotasi foto servis, label tanggapan garansi, dan monogram WI yang digambar khusus.
 - Penjelasan manfaat, alur penanganan, dan peran pembeli, pemberi garansi, serta mitra servis.
 - Navigasi responsif dan FAQ native yang tetap dapat dibuka tanpa JavaScript.
-- Motion ringan dengan dukungan `prefers-reduced-motion`, tanpa simulasi dashboard atau menu demo kasus.
+- Satu handoff native SVG/CSS/WAAPI berdurasi 4,4 detik: bukti berpindah, jalur tersambung, pemeriksaan dianotasi, lalu alasan penanganan ditegaskan. Otomatis sekali saat terlihat; tersedia tombol putar ulang/hentikan tanpa menu demo atau dashboard palsu.
+- Motion dijeda saat grafis keluar viewport atau tab tersembunyi, dibatalkan saat preferensi reduced-motion berubah, saat resize, dan saat komponen dilepas. Semua informasi tersedia sejak HTML awal; mobile memakai rantai vertikal, bukan SVG desktop yang dikecilkan.
 - Backend aplikasi, Prisma, autentikasi, dan rute akun/admin telah dihapus dari versi ini. Database eksternal beserta data lamanya tidak dihapus atau diakses oleh website.
 
 Website: https://warranty-idea-beta.vercel.app/
@@ -65,4 +66,4 @@ Fotografi oleh [IT services EU](https://www.pexels.com/@it-services-eu-9278798/)
 - [A Man Fixing a Laptop](https://www.pexels.com/photo/a-man-fixing-a-laptop-7639370/) untuk foto utama dan versi mobile.
 - [Hand with Screwdriver Fixing Motherboard](https://www.pexels.com/photo/hand-with-screwdriver-fixing-motherboard-7639373/) untuk foto detail.
 
-Gambar di-crop, diubah ukuran, dan dikompresi ke WebP secara lokal. Foto merupakan ilustrasi proses servis, bukan dokumentasi staf atau mitra WarrantyIDEA, dan tidak menyiratkan dukungan fotografer atau merek yang terlihat. Rincian sumber tersedia di `public/licenses/photography.txt` dan di footer halaman. Ikon menggunakan Lucide dengan lisensi ISC di `public/licenses/lucide.txt`; font Plus Jakarta Sans menggunakan lisensi OFL paket Fontsource.
+Gambar di-crop, diubah ukuran, dan dikompresi ke WebP secara lokal. Foto merupakan ilustrasi proses servis, bukan dokumentasi staf atau mitra WarrantyIDEA, dan tidak menyiratkan dukungan fotografer atau merek yang terlihat. Rincian sumber tersedia di `public/licenses/photography.txt` dan di footer halaman. Monogram, panah, dan objek grafis merupakan karya kode khusus dengan bantuan AI, bukan aset dari pustaka ikon. Tidak ada gambar generatif baru. Font Plus Jakarta Sans menggunakan lisensi OFL paket Fontsource.

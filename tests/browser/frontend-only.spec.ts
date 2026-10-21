@@ -1,6 +1,218 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+test("bukti, pemeriksaan, dan tanggapan tersambung dalam grafis layanan", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Nota ada.",
+  );
+  await expect(page.locator(".handoff-scene")).toBeVisible();
+  for (const name of [
+    "Bukti pembelian",
+    "Catatan pemeriksaan",
+    "Tanggapan garansi",
+  ]) {
+    await expect(
+      page.locator(".handoff-scene").getByRole("heading", { name }),
+    ).toBeVisible();
+  }
+  await expect(page.locator(".brand-mark").first()).toBeVisible();
+  await expect(page.locator("svg.lucide")).toHaveCount(0);
+});
+
+test("motion selesai sekali, replay dan stop membatalkan pekerjaan lama", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const scene = page.locator(".handoff");
+  await expect(scene).toHaveAttribute("data-playback", "running");
+  await expect(scene).toHaveAttribute("data-playback", "complete", {
+    timeout: 6500,
+  });
+  await page.getByRole("button", { name: "Putar ulang" }).click();
+  await expect(scene).toHaveAttribute("data-playback", "running");
+  await page.getByRole("button", { name: "Hentikan" }).click();
+  await expect(scene).toHaveAttribute("data-playback", "stopped");
+  await page.waitForTimeout(5000);
+  await expect(scene).toHaveAttribute("data-playback", "stopped");
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
+test("motion menjeda di luar viewport dan tidak mengulang saat kembali", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const graphic = page.locator(".handoff");
+  await expect(graphic).toHaveAttribute("data-playback", "running");
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  await expect(graphic).toHaveAttribute("data-playback", "paused");
+  const time = await page.evaluate(
+    () => document.getAnimations()[0]?.currentTime,
+  );
+  await page.waitForTimeout(350);
+  expect(
+    await page.evaluate(() => document.getAnimations()[0]?.currentTime),
+  ).toBe(time);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(graphic).toHaveAttribute("data-playback", "complete", {
+    timeout: 6500,
+  });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(graphic).toHaveAttribute("data-playback", "complete");
+});
+
+test("perubahan reduced motion membatalkan replay tanpa status kedaluwarsa", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const graphic = page.locator(".handoff");
+  await expect(graphic).toHaveAttribute("data-playback", "running");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(graphic).toHaveAttribute("data-playback", "reduced");
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+  await page.getByRole("button", { name: "Putar ulang" }).click();
+  await expect(graphic).toHaveAttribute("data-playback", "reduced");
+  await page.waitForTimeout(4500);
+  await expect(graphic).toHaveAttribute("data-playback", "reduced");
+  await expect(
+    graphic.getByRole("heading", { name: "Tanggapan garansi" }),
+  ).toBeVisible();
+});
+
+test("visibilitychange menjeda animasi dan resize menghentikan jalur lama", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".handoff")).toHaveAttribute(
+    "data-playback",
+    "running",
+  );
+  // Listener-level visibility test; not evidence of a genuine OS background-tab transition.
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator(".handoff")).toHaveAttribute(
+    "data-playback",
+    "paused",
+  );
+  expect(
+    await page.evaluate(() =>
+      document.getAnimations().every((a) => a.playState === "paused"),
+    ),
+  ).toBe(true);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => false,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator(".handoff")).toHaveAttribute(
+    "data-playback",
+    "running",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".handoff")).toHaveAttribute(
+    "data-playback",
+    "stopped",
+  );
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
+test("menu native mendukung Enter, Space dan fokus yang aman setelah resize", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const toggle = page.locator(".mobile-menu summary");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".mobile-menu")).toHaveAttribute("open", "");
+  await page.keyboard.press("Space");
+  await expect(page.locator(".mobile-menu")).not.toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Tab");
+  await expect(page.locator(".mobile-menu nav a").first()).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(page.locator(".desktop-nav a").first()).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#manfaat$/);
+});
+
+test("kontrol motion tidak menggeser grafis saat hidrasi", async ({
+  browser,
+  baseURL,
+}) => {
+  for (const width of [390, 1440]) {
+    const withoutJS = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width, height: 1000 },
+    });
+    const withJS = await browser.newContext({
+      reducedMotion: "reduce",
+      viewport: { width, height: 1000 },
+    });
+    try {
+      const staticPage = await withoutJS.newPage();
+      const activePage = await withJS.newPage();
+      await staticPage.goto(baseURL!);
+      await activePage.goto(baseURL!);
+      await expect(
+        activePage.getByRole("button", { name: "Putar ulang" }),
+      ).toBeVisible();
+      const staticBox = await staticPage
+        .locator(".handoff-caption")
+        .boundingBox();
+      const activeBox = await activePage
+        .locator(".handoff-caption")
+        .boundingBox();
+      expect(
+        Math.abs(staticBox!.height - activeBox!.height),
+      ).toBeLessThanOrEqual(2);
+    } finally {
+      await withoutJS.close();
+      await withJS.close();
+    }
+  }
+});
+
+test("barcode nota tidak menimpa keluhan pada layar sempit", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 1000 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const bars = await page.locator(".receipt-bars").boundingBox();
+  const complaint = await page
+    .locator(".evidence-object > strong")
+    .boundingBox();
+  const overlapX =
+    bars!.x < complaint!.x + complaint!.width &&
+    bars!.x + bars!.width > complaint!.x;
+  const overlapY =
+    bars!.y < complaint!.y + complaint!.height &&
+    bars!.y + bars!.height > complaint!.y;
+  expect(overlapX && overlapY).toBe(false);
+});
+
+test("cap tanggapan tidak menimpa rincian selama handoff", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Putar ulang" }).click();
+  const stamp = await page.locator(".response-stamp").boundingBox();
+  const details = await page.locator(".response-object dl").boundingBox();
+  expect(stamp!.y + stamp!.height).toBeLessThanOrEqual(details!.y);
+});
+
 for (const width of [320, 390, 768, 1440]) {
   test(`halaman foto ringan, terbaca, dan aksesibel pada ${width}px`, async ({
     page,
@@ -12,12 +224,12 @@ for (const width of [320, 390, 768, 1440]) {
     const response = await page.goto("/");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Informasi jangan ikut hilang",
+      "Setelah itu, apa?",
     );
     await expect(page.locator("header")).not.toContainText(
       /demo|masuk|daftar|dashboard/i,
     );
-    await expect(page.locator(".hero-photo img")).toBeVisible();
+    await expect(page.locator(".inspection-photo img")).toBeVisible();
     await page.locator("footer").scrollIntoViewIfNeeded();
     await page.waitForFunction(() =>
       [...document.querySelectorAll<HTMLImageElement>("main img")].every(
@@ -67,7 +279,7 @@ test("menu mobile menutup saat Escape, klik luar, memilih tautan, dan resize", a
   await expect(menu).not.toHaveAttribute("open", "");
   await expect(toggle).toBeFocused();
   await toggle.click();
-  await page.locator(".hero-photo").click();
+  await page.locator(".inspection-photo").click();
   await expect(menu).not.toHaveAttribute("open", "");
   await toggle.click();
   await menu.getByRole("link", { name: "Alur penanganan" }).click();
@@ -91,6 +303,15 @@ for (const width of [390, 1440]) {
     try {
       expect((await page.goto(baseURL!))?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      for (const name of [
+        "Bukti pembelian",
+        "Catatan pemeriksaan",
+        "Tanggapan garansi",
+      ]) {
+        await expect(
+          page.locator(".handoff-scene").getByRole("heading", { name }),
+        ).toBeVisible();
+      }
       if (width < 768) {
         await page.locator(".mobile-menu summary").click();
         await expect(page.locator(".mobile-menu nav")).toBeVisible();
@@ -178,7 +399,7 @@ test("reduced motion mematikan animasi tanpa menyembunyikan informasi", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.locator(".hero-photo")).toBeVisible();
+  await expect(page.locator(".handoff-scene")).toBeVisible();
   expect(
     await page.evaluate(
       () => getComputedStyle(document.documentElement).scrollBehavior,

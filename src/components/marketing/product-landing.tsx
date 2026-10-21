@@ -1,13 +1,12 @@
 /* eslint-disable @next/next/no-img-element -- Responsive, locally pre-encoded WebP images; no image server is needed by the static export. */
 import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  FileCheck2,
-  ShieldCheck,
-  Wrench,
-} from "lucide-react";
+  Arrow as ArrowDown,
+  Arrow as ArrowRight,
+  Arrow as ArrowUpRight,
+  Arrow as Check,
+  Brand,
+} from "@/components/layout/brand";
+import { ServiceHandoff } from "./service-handoff";
 import { SiteHeader } from "@/components/layout/site-header";
 
 const benefits = [
@@ -52,65 +51,32 @@ export function ProductLanding() {
     <>
       <SiteHeader />
       <main id="main" tabIndex={-1}>
-        <section className="container hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow">
-              <span className="small-rule" /> KONSEP PLATFORM PURNAJUAL
-            </p>
-            <h1 id="hero-title">
-              <span className="headline-lead">Barang bermasalah.</span>{" "}
-              <span className="headline-main">
-                Informasi jangan ikut hilang.
-              </span>
-            </h1>
-            <p className="hero-description">
-              Garansi bukan cuma tanggal kedaluwarsa. Ada bukti yang perlu
-              dibaca, barang yang perlu diperiksa, dan orang yang menunggu
-              kepastian.
-            </p>
-            <a className="button" href="#alur">
-              Lihat alurnya <ArrowDown size={18} aria-hidden="true" />
-            </a>
-            <div className="hero-footnote">
-              <span className="small-rule" />
-              <p>
-                Untuk pembeli, pemberi garansi,
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="container hero-band">
+            <div className="hero-copy">
+              <h1 id="hero-title">
+                <span className="headline-lead">Nota ada.</span>{" "}
+                <span className="headline-main">Setelah itu, apa?</span>
+              </h1>
+            </div>
+            <div className="hero-context">
+              <p className="hero-description">
+                Barang rusak perlu diperiksa.
                 <br />
-                dan mitra servis yang saling terhubung.
+                Pembeli perlu jawaban yang jelas.
               </p>
+              <p>
+                WarrantyIDEA adalah konsep alur purnajual yang menyambungkan
+                bukti pembelian, temuan servis, dan alasan penanganan.
+              </p>
+              <a className="button" href="#alur">
+                Lihat alurnya <ArrowDown down />
+              </a>
             </div>
           </div>
-          <figure className="hero-photo">
-            <div className="photo-topline">
-              <span>LEBIH DARI SEKADAR KARTU GARANSI</span>
-              <span aria-hidden="true">↗</span>
-            </div>
-            <picture>
-              <source
-                media="(max-width: 767px)"
-                srcSet="/images/repair-workbench-small.webp"
-              />
-              <img
-                src="/images/repair-workbench.webp"
-                width={1120}
-                height={1000}
-                alt="Tangan teknisi membuka komponen laptop menggunakan obeng di meja kerja."
-                fetchPriority="high"
-                loading="eager"
-                decoding="async"
-              />
-            </picture>
-            <figcaption>
-              <span>
-                Periksa barangnya.
-                <br />
-                <strong>Jangan putus riwayatnya.</strong>
-              </span>
-              <span className="photo-caption-mark" aria-hidden="true">
-                <Wrench size={25} strokeWidth={1.5} />
-              </span>
-            </figcaption>
-          </figure>
+          <div className="container">
+            <ServiceHandoff />
+          </div>
         </section>
 
         <section
@@ -119,8 +85,9 @@ export function ProductLanding() {
           aria-labelledby="benefits-title"
         >
           <div className="section-intro">
-            <p className="eyebrow">YANG INGIN DIBERESKAN</p>
-            <h2 id="benefits-title">Waktu habis bukan cuma di meja servis.</h2>
+            <h2 id="benefits-title">
+              Yang bikin lama: mulai dari nol, berkali-kali.
+            </h2>
             <p>
               Sering kali, pekerjaan ikut tersendat saat informasi harus diminta
               lagi. WarrantyIDEA dirancang untuk merapikan bagian itu.
@@ -129,7 +96,6 @@ export function ProductLanding() {
           <div className="benefit-rows">
             {benefits.map(([number, title, description]) => (
               <article key={number}>
-                <span className="row-number">{number}</span>
                 <div>
                   <h3>{title}</h3>
                   <p>{description}</p>
@@ -147,11 +113,10 @@ export function ProductLanding() {
           <div className="container section-space">
             <div className="flow-heading">
               <div>
-                <p className="eyebrow">SATU URUTAN YANG MASUK AKAL</p>
                 <h2 id="flow-title">
-                  Dari laporan,
+                  Barang berpindah tangan.
                   <br />
-                  sampai ada kejelasan.
+                  Informasi jangan terputus.
                 </h2>
               </div>
               <p>
@@ -163,7 +128,6 @@ export function ProductLanding() {
               <li>
                 <div className="flow-step-top">
                   <span>01 / LAPORKAN</span>
-                  <FileCheck2 size={24} strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <h3>Mulai dari bukti.</h3>
                 <p>
@@ -171,13 +135,12 @@ export function ProductLanding() {
                   kendalanya.
                 </p>
                 <span className="flow-party">
-                  Pembeli <ArrowRight size={16} aria-hidden="true" />
+                  Pembeli <ArrowRight />
                 </span>
               </li>
               <li>
                 <div className="flow-step-top">
                   <span>02 / PERIKSA</span>
-                  <Wrench size={24} strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <h3>Lihat kondisi sebenarnya.</h3>
                 <p>
@@ -185,13 +148,12 @@ export function ProductLanding() {
                   ditinjau pemberi garansi.
                 </p>
                 <span className="flow-party">
-                  Mitra servis <ArrowRight size={16} aria-hidden="true" />
+                  Mitra servis <ArrowRight />
                 </span>
               </li>
               <li>
                 <div className="flow-step-top">
                   <span>03 / TENTUKAN</span>
-                  <ShieldCheck size={24} strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <h3>Sampaikan keputusan.</h3>
                 <p>
@@ -199,7 +161,7 @@ export function ProductLanding() {
                   jika memang ada.
                 </p>
                 <span className="flow-party">
-                  Pemberi garansi <Check size={16} aria-hidden="true" />
+                  Pemberi garansi <Check />
                 </span>
               </li>
             </ol>
@@ -229,8 +191,7 @@ export function ProductLanding() {
             </figcaption>
           </figure>
           <div className="people-copy">
-            <p className="eyebrow">TIGA PIHAK, KONTEKS YANG SAMA</p>
-            <h2 id="people-title">Masing-masing tahu bagiannya.</h2>
+            <h2 id="people-title">Satu kasus. Bukan satu sudut pandang.</h2>
             <dl>
               <div>
                 <dt>Pemberi garansi</dt>
@@ -263,8 +224,7 @@ export function ProductLanding() {
           aria-labelledby="questions-title"
         >
           <div className="section-intro">
-            <p className="eyebrow">BIAR TIDAK SALAH PAHAM</p>
-            <h2 id="questions-title">Sebelum melangkah lebih jauh.</h2>
+            <h2 id="questions-title">Biar jelas dari awal.</h2>
           </div>
           <div className="faq-list">
             {questions.map(([question, answer]) => (
@@ -280,11 +240,10 @@ export function ProductLanding() {
         </section>
         <section className="container closing" aria-labelledby="closing-title">
           <div>
-            <p className="eyebrow">WARRANTYIDEA</p>
             <h2 id="closing-title">
-              Garansi jelas.
+              Bukan janji pasti diganti.
               <br />
-              Penanganan terlacak.
+              Penanganan yang bisa dijelaskan.
             </h2>
           </div>
           <div>
@@ -294,7 +253,7 @@ export function ProductLanding() {
               Buktikan manfaatnya lewat pekerjaan nyata.
             </p>
             <a className="text-link" href="#manfaat">
-              Kenali pendekatannya <ArrowUpRight size={18} aria-hidden="true" />
+              Kenali pendekatannya <ArrowUpRight />
             </a>
           </div>
         </section>
@@ -302,12 +261,11 @@ export function ProductLanding() {
       <footer className="container site-footer">
         <div className="footer-top">
           <a className="wordmark" href="/">
-            Warranty<span className="wordmark-suffix">IDEA</span>
-            <span className="wordmark-dot">.</span>
+            <Brand />
           </a>
           <p>© 2026 WarrantyIDEA</p>
           <a className="text-link" href="#main">
-            Kembali ke atas <ArrowUpRight size={15} aria-hidden="true" />
+            Kembali ke atas <ArrowUpRight />
           </a>
         </div>
         <p className="site-scope">
