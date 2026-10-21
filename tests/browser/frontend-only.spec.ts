@@ -51,13 +51,19 @@ test("motion menjeda di luar viewport dan tidak mengulang saat kembali", async (
     window.scrollTo(0, document.body.scrollHeight);
   });
   await expect(graphic).toHaveAttribute("data-playback", "paused");
-  const time = await page.evaluate(
-    () => document.getAnimations()[0]?.currentTime,
-  );
+  const time = await page.evaluate(async () => {
+    const animations = document.getAnimations();
+    // pause() commits on the animation timeline; wait for that commit before sampling.
+    await Promise.all(animations.map((animation) => animation.ready));
+    return animations.map((animation) => animation.currentTime);
+  });
+  expect(time.length).toBeGreaterThan(0);
   await page.waitForTimeout(350);
   expect(
-    await page.evaluate(() => document.getAnimations()[0]?.currentTime),
-  ).toBe(time);
+    await page.evaluate(() =>
+      document.getAnimations().map((animation) => animation.currentTime),
+    ),
+  ).toEqual(time);
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(graphic).toHaveAttribute("data-playback", "complete", {
     timeout: 6500,
